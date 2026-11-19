@@ -1,0 +1,3 @@
+"""
+SENTINEL Event Simulator Package.
+"""
