@@ -1,5 +1,5 @@
 # SENTINEL: API Behaviour Monitoring & Suspicious Activity Detection System
-## Phases 1 & 2: Foundation, API Event Collection, and Deterministic Security Detection Engine
+## Phases 1, 2 & 3: Foundation, Deterministic Security Engine, and Isolation Forest ML Behavioral Anomaly Detection
 
 ---
 
@@ -9,9 +9,9 @@
 2. **HelpDeskr**: Enterprise customer and vendor ticketing support system.
 3. **TallyBridge**: Integration software synchronizing accounting and financial data with LedgerOne.
 
-In **Phase 1**, SENTINEL established high-throughput event ingestion, schema enforcement, sensitive data sanitization, cryptographic integrity hashing, and PostgreSQL storage.
-
-In **Phase 2**, SENTINEL adds an inline, modular, deterministic security detection engine that evaluates every incoming API event against configurable security rules, generating explainable security incidents with severity bands, risk scores (0–100), and structured evidence.
+- In **Phase 1**, SENTINEL established high-throughput event ingestion, schema enforcement, sensitive data sanitization, cryptographic integrity hashing, and PostgreSQL storage.
+- In **Phase 2**, SENTINEL added an inline, modular, deterministic security detection engine that evaluates every incoming API event against configurable security rules, generating explainable security incidents with severity bands, risk scores (0–100), and structured evidence.
+- In **Phase 3**, SENTINEL integrates a machine learning behavioral anomaly detection subsystem using **Scikit-learn Isolation Forest**. The ML engine extracts 15 numerical behavioral features across sliding observation windows, calibrates anomaly thresholds against service-specific baselines, enforces data sufficiency guards, ranks feature deviations via Z-scores, and generates correlated `ML-ANOMALY-ISOFOR-001` incidents.
 
 ---
 
@@ -286,8 +286,68 @@ curl -X GET "http://127.0.0.1:8000/api/v1/detection/summary"
 
 ---
 
-## 10. Security Considerations & Limitations
+## 10. Phase 3: Machine Learning Behavioral Anomaly Detection
 
-1. **Service Identity Authentication Limitation**: In this development phase, service identities are read from incoming event telemetry and matched against the configuration policy. There is **no cryptographic mTLS or OAuth2/JWT token verification** yet. Do not assume claimed identities are independently attested until Phase 3 adds client certificate / token validation.
-2. **Localhost Single-Node Constraint**: Phase 2 runs in a local environment (Windows 11, 16 GB RAM). Production clustering, distributed locks, and cloud RDS will follow in deployment phases.
-3. **Detection vs Enforcement**: The engine operates as an observer/monitor; it does not block operations on the monitored systems themselves.
+### Architecture & Capabilities
+- **Model**: Scikit-learn `IsolationForest` ($N=100$ estimators, contamination $0.05$, random state $42$).
+- **Features**: 15 numerical behavioral features extracted over sliding 300-second windows without PII/secrets.
+- **Sufficiency Guard**: Requires at least 20 training observations (`MIN_SAMPLES_FOR_BASELINE = 20`) to establish a service baseline; otherwise returns `INSUFFICIENT_BASELINE`.
+- **Sigmoid Calibration**: Calibrates raw negative score samples into $[0.0, 1.0]$ space. Events with score $\ge 0.65$ raise an anomaly.
+- **Explainability**: Statistical Z-score calculation ranks strongest contributing deviating features.
+- **Incident Engine Integration**: Dispatches to the incident engine as `ML-ANOMALY-ISOFOR-001` with correlated deduplication.
+- **Fault-Tolerant Non-Blocking Ingestion**: ML failures never abort event persistence to PostgreSQL.
+
+---
+
+## 11. Machine Learning API Endpoints & PowerShell Commands
+
+### A. Check ML Operational Status & Baselines
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/ml/status" -Method Get | ConvertTo-Json -Depth 4
+```
+
+### B. Explicitly Train / Calibrate a Service Baseline
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/ml/train" `
+  -Method Post -ContentType "application/json" `
+  -Body '{"service_identity": "srv-ledgerone-core", "num_samples": 60, "version": "1.0.0"}' | ConvertTo-Json -Depth 4
+```
+
+### C. List Saved Model Artifacts & Baselines
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/ml/models" -Method Get | ConvertTo-Json -Depth 4
+```
+
+### D. Run Statistical Benchmark Evaluation Report
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/ml/evaluation?service_identity=srv-ledgerone-core" -Method Get | ConvertTo-Json -Depth 4
+```
+
+### E. Query ML-Detected Behavioral Anomalies
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/ml/anomalies" -Method Get | ConvertTo-Json -Depth 6
+```
+
+---
+
+## 12. Automated Test Suite (57 Passing Tests)
+
+Run the complete test suite verifying Phase 1, Phase 2, and Phase 3:
+```powershell
+cd "e:\project crimathon\drive-download-20261119T081747Z-1-001\pipeline buid\sentinel\backend"
+pytest -v
+```
+
+**Test Coverage Summary**:
+- **Phase 1 Foundation (21 tests)**: Ingestion, schema validation, duplicate collision rejection, PII/bank redaction, size limits, health probes.
+- **Phase 2 Deterministic Rules (18 tests)**: 6 security detection rules (`SEC-RULE-*`), risk scoring, incident correlation & deduplication, triage status lifecycle.
+- **Phase 3 Machine Learning (18 tests)**: 15-feature extraction, empty/missing event tolerance, model training & Joblib persistence roundtrip, normal vs anomalous scoring, baseline sufficiency enforcement, ML incident integration, and ML REST API.
+
+---
+
+## 13. Security Considerations & Limitations
+
+1. **Synthetic Development Baselines**: The initial baseline models are trained on synthetic normal traffic matching service profiles. Real-world accuracy will depend on continuous telemetry retraining.
+2. **Administrative Operation Protection**: In this development phase, `/api/v1/ml/train` is designed for administrative execution and restricted to local network binding. Production environments require OAuth2 / RBAC guards.
+3. **Observation Window Aggregation**: A minimum of 3 events per window is required before evaluating behavioral anomaly patterns to avoid false alarms on isolated transactions.
+4. **Non-Blocking Observability**: The ML engine functions as a passive behavioral observer. It generates explainable security incidents for SOC review without blocking core microservice operations.

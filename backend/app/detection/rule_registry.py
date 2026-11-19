@@ -5,14 +5,6 @@ Maintains active security rules, dynamic toggling, and metadata query capabiliti
 
 from typing import Dict, List, Optional
 from sentinel.backend.app.detection.base_rule import BaseDetectionRule
-from sentinel.backend.app.detection.rules import (
-    ExcessiveRequestRateRule,
-    BulkVendorAccessRule,
-    UnexpectedSourceIPRule,
-    PrivilegeViolationRule,
-    SensitiveBankChangeRule,
-    MissingApprovalRule
-)
 
 
 class RuleRegistry:
@@ -23,6 +15,14 @@ class RuleRegistry:
 
     def _register_default_rules(self):
         """Instantiate and register all Phase 2 security rules."""
+        from sentinel.backend.app.detection.rules import (
+            ExcessiveRequestRateRule,
+            BulkVendorAccessRule,
+            UnexpectedSourceIPRule,
+            PrivilegeViolationRule,
+            SensitiveBankChangeRule,
+            MissingApprovalRule
+        )
         rules = [
             ExcessiveRequestRateRule(),
             BulkVendorAccessRule(),

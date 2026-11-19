@@ -17,6 +17,7 @@ from sentinel.backend.app.middleware.security_headers import SecurityHeadersMidd
 from sentinel.backend.app.routes.health import router as health_router
 from sentinel.backend.app.routes.events import router as events_router
 from sentinel.backend.app.routes.incidents import router as incidents_router
+from sentinel.backend.app.routes.ml import router as ml_router
 
 settings = get_settings()
 
@@ -118,6 +119,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 app.include_router(health_router)
 app.include_router(events_router)
 app.include_router(incidents_router)
+app.include_router(ml_router)
 
 
 if __name__ == "__main__":

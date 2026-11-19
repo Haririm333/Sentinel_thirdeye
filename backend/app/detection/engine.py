@@ -5,10 +5,9 @@ to the Incident Management Service.
 """
 
 import logging
-from typing import List
+from typing import List, Optional
 from sqlalchemy.orm import Session
 
-from sentinel.backend.app.detection.rule_registry import rule_registry
 from sentinel.backend.app.models.api_event import ApiEvent
 from sentinel.backend.app.models.incident import Incident
 from sentinel.backend.app.services.incident_service import create_or_update_incident
@@ -22,8 +21,15 @@ class DetectionEngine:
     Deterministic rule execution engine.
     Processes newly persisted API events through all registered and enabled security rules.
     """
-    def __init__(self, registry=rule_registry):
-        self.registry = registry
+    def __init__(self, registry=None):
+        self._registry = registry
+
+    @property
+    def registry(self):
+        if self._registry is None:
+            from sentinel.backend.app.detection.rule_registry import rule_registry
+            self._registry = rule_registry
+        return self._registry
 
     def analyze_event(self, event: ApiEvent, db: Session) -> List[Incident]:
         """

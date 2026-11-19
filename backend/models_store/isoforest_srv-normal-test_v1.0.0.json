@@ -1,0 +1,124 @@
+{
+  "model_id": "isoforest_srv-normal-test_v1.0.0",
+  "model_version": "1.0.0",
+  "service_identity": "srv-normal-test",
+  "created_at": "2026-11-19T21:41:38.433752+00:00",
+  "feature_schema_version": "1.0.0",
+  "feature_names": [
+    "requests_count",
+    "avg_request_size",
+    "avg_response_size",
+    "total_bytes_transferred",
+    "unique_endpoints_count",
+    "unique_vendors_count",
+    "read_to_write_ratio",
+    "failed_request_ratio",
+    "unusual_method_frequency",
+    "time_of_day_deviation",
+    "inter_request_time_variance",
+    "new_endpoint_ratio",
+    "source_ip_novelty",
+    "sensitive_resource_frequency",
+    "permission_deviation_count"
+  ],
+  "calibrated_threshold": -0.5669474281775877,
+  "training_sample_count": 60,
+  "hyperparameters": {
+    "n_estimators": 100,
+    "contamination": 0.05,
+    "random_state": 42
+  },
+  "feature_baselines": {
+    "requests_count": {
+      "mean": 8.05,
+      "std": 2.6421,
+      "min": 4.0,
+      "max": 12.0
+    },
+    "avg_request_size": {
+      "mean": 278.0606,
+      "std": 13.6602,
+      "min": 248.0,
+      "max": 311.8571
+    },
+    "avg_response_size": {
+      "mean": 3522.8912,
+      "std": 359.6938,
+      "min": 2539.4,
+      "max": 4298.8
+    },
+    "total_bytes_transferred": {
+      "mean": 30636.5,
+      "std": 10518.1969,
+      "min": 12694.0,
+      "max": 51505.0
+    },
+    "unique_endpoints_count": {
+      "mean": 1.0,
+      "std": 1.0,
+      "min": 1.0,
+      "max": 1.0
+    },
+    "unique_vendors_count": {
+      "mean": 0.0,
+      "std": 1.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "read_to_write_ratio": {
+      "mean": 8.05,
+      "std": 2.6421,
+      "min": 4.0,
+      "max": 12.0
+    },
+    "failed_request_ratio": {
+      "mean": 0.0,
+      "std": 1.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "unusual_method_frequency": {
+      "mean": 0.0,
+      "std": 1.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "time_of_day_deviation": {
+      "mean": 0.0,
+      "std": 1.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "inter_request_time_variance": {
+      "mean": 901.2059,
+      "std": 1047.0152,
+      "min": 23.3354,
+      "max": 6399.5842
+    },
+    "new_endpoint_ratio": {
+      "mean": 0.0,
+      "std": 1.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "source_ip_novelty": {
+      "mean": 0.0,
+      "std": 1.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "sensitive_resource_frequency": {
+      "mean": 0.0,
+      "std": 1.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "permission_deviation_count": {
+      "mean": 0.0,
+      "std": 1.0,
+      "min": 0.0,
+      "max": 0.0
+    }
+  },
+  "model_status": "READY"
+}

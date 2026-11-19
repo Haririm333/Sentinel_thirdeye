@@ -1,0 +1,125 @@
+{
+  "model_id": "isoforest_srv-helpdeskr-agent_v1.0.0",
+  "model_version": "1.0.0",
+  "service_identity": "srv-helpdeskr-agent",
+  "created_at": "2026-11-19T21:45:00.052751+00:00",
+  "feature_schema_version": "1.0.0",
+  "feature_names": [
+    "requests_count",
+    "avg_request_size",
+    "avg_response_size",
+    "total_bytes_transferred",
+    "unique_endpoints_count",
+    "unique_vendors_count",
+    "read_to_write_ratio",
+    "failed_request_ratio",
+    "unusual_method_frequency",
+    "time_of_day_deviation",
+    "inter_request_time_variance",
+    "new_endpoint_ratio",
+    "source_ip_novelty",
+    "sensitive_resource_frequency",
+    "permission_deviation_count"
+  ],
+  "feature_count": 15,
+  "calibrated_threshold": -0.5801159300676577,
+  "training_sample_count": 60,
+  "hyperparameters": {
+    "n_estimators": 100,
+    "contamination": 0.05,
+    "random_state": 42
+  },
+  "feature_baselines": {
+    "requests_count": {
+      "mean": 7.7167,
+      "std": 2.4569,
+      "min": 4.0,
+      "max": 12.0
+    },
+    "avg_request_size": {
+      "mean": 279.2017,
+      "std": 24.3263,
+      "min": 231.5,
+      "max": 333.7143
+    },
+    "avg_response_size": {
+      "mean": 1588.0003,
+      "std": 136.2177,
+      "min": 1272.0,
+      "max": 1927.5
+    },
+    "total_bytes_transferred": {
+      "mean": 14408.3,
+      "std": 4742.7829,
+      "min": 6390.0,
+      "max": 26003.0
+    },
+    "unique_endpoints_count": {
+      "mean": 5.4833,
+      "std": 1.3843,
+      "min": 2.0,
+      "max": 8.0
+    },
+    "unique_vendors_count": {
+      "mean": 5.4833,
+      "std": 1.3843,
+      "min": 2.0,
+      "max": 8.0
+    },
+    "read_to_write_ratio": {
+      "mean": 4.3639,
+      "std": 2.7542,
+      "min": 0.6667,
+      "max": 12.0
+    },
+    "failed_request_ratio": {
+      "mean": 0.0,
+      "std": 1.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "unusual_method_frequency": {
+      "mean": 0.0,
+      "std": 1.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "time_of_day_deviation": {
+      "mean": 0.0,
+      "std": 1.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "inter_request_time_variance": {
+      "mean": 1102.7777,
+      "std": 1265.9655,
+      "min": 74.8949,
+      "max": 7307.3499
+    },
+    "new_endpoint_ratio": {
+      "mean": 0.0,
+      "std": 1.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "source_ip_novelty": {
+      "mean": 0.0,
+      "std": 1.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "sensitive_resource_frequency": {
+      "mean": 0.0,
+      "std": 1.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "permission_deviation_count": {
+      "mean": 0.0,
+      "std": 1.0,
+      "min": 0.0,
+      "max": 0.0
+    }
+  },
+  "model_status": "READY"
+}

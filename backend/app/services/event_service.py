@@ -7,7 +7,7 @@ integrity hashing, and database persistence.
 import hashlib
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional, Tuple, List
 from sqlalchemy import select, func, and_
 from sqlalchemy.orm import Session
@@ -177,6 +177,33 @@ def process_and_store_event(db: Session, event_in: EventCreate, client_ip: str) 
         logger.error(
             "Detection engine encounter failure analyzing event %s: %s",
             db_event.event_id, str(detect_exc), exc_info=True
+        )
+
+    # 8. Run Machine Learning Behavioral Anomaly Detector (Phase 3)
+    try:
+        from sentinel.backend.app.ml.config import ml_settings
+        from sentinel.backend.app.ml.features import extract_window_features
+        from sentinel.backend.app.ml.detector import anomaly_detector
+
+        window_start = db_event.timestamp - timedelta(seconds=ml_settings.WINDOW_SECONDS)
+        recent_events = list(
+            db.execute(
+                select(ApiEvent).where(
+                    and_(
+                        ApiEvent.service_identity == db_event.service_identity,
+                        ApiEvent.timestamp >= window_start,
+                        ApiEvent.timestamp <= db_event.timestamp
+                    )
+                )
+            ).scalars().all()
+        )
+        if recent_events and len(recent_events) >= ml_settings.MIN_EVENTS_PER_WINDOW:
+            window_features = extract_window_features(recent_events, db_event.service_identity)
+            anomaly_detector.evaluate_and_record_incident(window_features, db_event, db)
+    except Exception as ml_exc:
+        logger.error(
+            "ML anomaly detector encounter failure analyzing event %s: %s",
+            db_event.event_id, str(ml_exc), exc_info=True
         )
 
     return db_event
