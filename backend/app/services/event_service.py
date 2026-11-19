@@ -206,6 +206,36 @@ def process_and_store_event(db: Session, event_in: EventCreate, client_ip: str) 
             db_event.event_id, str(ml_exc), exc_info=True
         )
 
+    # 9. Run LSTM Autoencoder Sequential Anomaly Detector (Phase 4)
+    try:
+        from sentinel.backend.app.ml.lstm.config import lstm_settings
+        from sentinel.backend.app.ml.lstm.sequence_pipeline import build_sequences_from_events
+        from sentinel.backend.app.ml.lstm.detector import lstm_detector
+
+        seq_events = list(
+            db.execute(
+                select(ApiEvent)
+                .where(ApiEvent.service_identity == db_event.service_identity)
+                .order_by(ApiEvent.timestamp.desc())
+                .limit(lstm_settings.SEQUENCE_LENGTH)
+            ).scalars().all()
+        )
+        if len(seq_events) == lstm_settings.SEQUENCE_LENGTH:
+            chronological_events = list(reversed(seq_events))
+            seq_array = build_sequences_from_events(
+                events=chronological_events,
+                service_identity=db_event.service_identity,
+                seq_len=lstm_settings.SEQUENCE_LENGTH,
+                stride=lstm_settings.SEQUENCE_LENGTH
+            )
+            if len(seq_array) > 0:
+                lstm_detector.evaluate_and_record_incident(seq_array[0], chronological_events, db)
+    except Exception as lstm_exc:
+        logger.error(
+            "LSTM sequential detector encounter failure analyzing event %s: %s",
+            db_event.event_id, str(lstm_exc), exc_info=True
+        )
+
     return db_event
 
 

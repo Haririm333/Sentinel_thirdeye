@@ -2,7 +2,7 @@
   "model_id": "isoforest_srv-ledgerone-core_v1.0.0",
   "model_version": "1.0.0",
   "service_identity": "srv-ledgerone-core",
-  "created_at": "2026-11-19T21:44:59.787315+00:00",
+  "created_at": "2026-11-19T22:00:50.247611+00:00",
   "feature_schema_version": "1.0.0",
   "feature_names": [
     "requests_count",

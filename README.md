@@ -1,5 +1,5 @@
 # SENTINEL: API Behaviour Monitoring & Suspicious Activity Detection System
-## Phases 1, 2 & 3: Foundation, Deterministic Security Engine, and Isolation Forest ML Behavioral Anomaly Detection
+## Phases 1, 2, 3 & 4: Foundation, Deterministic Rules, Isolation Forest ML, and LSTM Autoencoder Sequential Anomaly Detection
 
 ---
 
@@ -11,7 +11,8 @@
 
 - In **Phase 1**, SENTINEL established high-throughput event ingestion, schema enforcement, sensitive data sanitization, cryptographic integrity hashing, and PostgreSQL storage.
 - In **Phase 2**, SENTINEL added an inline, modular, deterministic security detection engine that evaluates every incoming API event against configurable security rules, generating explainable security incidents with severity bands, risk scores (0–100), and structured evidence.
-- In **Phase 3**, SENTINEL integrates a machine learning behavioral anomaly detection subsystem using **Scikit-learn Isolation Forest**. The ML engine extracts 15 numerical behavioral features across sliding observation windows, calibrates anomaly thresholds against service-specific baselines, enforces data sufficiency guards, ranks feature deviations via Z-scores, and generates correlated `ML-ANOMALY-ISOFOR-001` incidents.
+- In **Phase 3**, SENTINEL integrated an unsupervised machine learning anomaly detection subsystem using **Scikit-learn Isolation Forest**. The ML engine extracts 15 numerical behavioral features across sliding observation windows, calibrates anomaly thresholds against service-specific baselines, enforces data sufficiency guards, ranks feature deviations via Z-scores, and generates correlated `ML-ANOMALY-ISOFOR-001` incidents.
+- In **Phase 4**, SENTINEL adds deep learning **sequential anomaly detection** using a PyTorch **LSTM Autoencoder** (13,695 parameters). It models chronological sequences of 20 API events per service, extracts 15 compatible sequential features without PII, normalizes features on training sequences only, calculates reconstruction Mean Squared Error (MSE), attributes feature-level errors, and generates correlated `ML-ANOMALY-LSTM-001` incidents.
 
 ---
 
@@ -330,9 +331,54 @@ Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/ml/anomalies" -Method Get |
 
 ---
 
-## 12. Automated Test Suite (57 Passing Tests)
+## 12. Phase 4: LSTM Autoencoder Sequential Anomaly Detection
 
-Run the complete test suite verifying Phase 1, Phase 2, and Phase 3:
+### Architecture & Capabilities
+- **Model**: PyTorch `LSTMAutoencoder` (Encoder: 1-layer LSTM hidden 32 -> latent 16; Decoder: 1-layer LSTM hidden 32 -> 15 features; 13,695 parameters).
+- **Sequential Input**: Shape $(B, 20, 15)$ representing 20 consecutive chronological events for a specific service identity.
+- **Normalization**: `StandardScaler` fitted strictly on normal training sequences (no future leakage).
+- **Reconstruction Loss**: Mean Squared Error (MSE). Normal sequences reconstruct with $\text{MSE} \approx 0.15 - 0.40$; anomalous sequences spike to $\text{MSE} \gg 1.0$.
+- **Sigmoid Calibration**: Calibrated relative overshoot mapping into $[0.0, 1.0]$. Sequences scoring $\ge 0.65$ generate incidents.
+- **Explainability**: Granular per-feature reconstruction error ratio identifying specific anomalous steps.
+- **Incident Engine Integration**: Dispatches to the incident engine as `ML-ANOMALY-LSTM-001` with correlated deduplication.
+- **Fault-Tolerant Non-Blocking Ingestion**: Handled with independent try-except boundaries so core telemetry is never lost.
+
+---
+
+## 13. LSTM REST API Endpoints & PowerShell Commands
+
+### A. Check LSTM Subsystem Status & Baselines
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/ml/lstm/status" -Method Get | ConvertTo-Json -Depth 4
+```
+
+### B. Explicitly Train / Calibrate an LSTM Service Baseline
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/ml/lstm/train" `
+  -Method Post -ContentType "application/json" `
+  -Body '{"service_identity": "srv-ledgerone-core", "epochs": 25, "batch_size": 16, "version": "1.0.0"}' | ConvertTo-Json -Depth 4
+```
+
+### C. List Saved PyTorch Models & Manifests
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/ml/lstm/models" -Method Get | ConvertTo-Json -Depth 4
+```
+
+### D. Run Benchmark Evaluation & Isolation Forest Comparison
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/ml/lstm/evaluation?service_identity=srv-ledgerone-core" -Method Get | ConvertTo-Json -Depth 5
+```
+
+### E. Query LSTM-Detected Sequential Anomalies
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/ml/lstm/anomalies" -Method Get | ConvertTo-Json -Depth 6
+```
+
+---
+
+## 14. Automated Test Suite (79 Passing Tests)
+
+Run the complete test suite verifying Phase 1, Phase 2, Phase 3, and Phase 4:
 ```powershell
 cd "e:\project crimathon\drive-download-20261119T081747Z-1-001\pipeline buid\sentinel\backend"
 pytest -v
@@ -341,13 +387,14 @@ pytest -v
 **Test Coverage Summary**:
 - **Phase 1 Foundation (21 tests)**: Ingestion, schema validation, duplicate collision rejection, PII/bank redaction, size limits, health probes.
 - **Phase 2 Deterministic Rules (18 tests)**: 6 security detection rules (`SEC-RULE-*`), risk scoring, incident correlation & deduplication, triage status lifecycle.
-- **Phase 3 Machine Learning (18 tests)**: 15-feature extraction, empty/missing event tolerance, model training & Joblib persistence roundtrip, normal vs anomalous scoring, baseline sufficiency enforcement, ML incident integration, and ML REST API.
+- **Phase 3 Isolation Forest (18 tests)**: 15-feature extraction, empty/missing event tolerance, model training & Joblib persistence roundtrip, normal vs anomalous scoring, baseline sufficiency enforcement, ML incident integration, and ML REST API.
+- **Phase 4 LSTM Autoencoder (22 tests)**: Sequence generation, chronological ordering, service isolation, train-only normalization, PyTorch forward pass, reconstruction loss, safe state_dict persistence/loading, normal sequence reconstruction, multi-step attack sequence detection, ML-ANOMALY-LSTM-001 incident generation, deduplication, fault tolerance, and LSTM REST API.
 
 ---
 
-## 13. Security Considerations & Limitations
+## 15. Security Considerations & Limitations
 
-1. **Synthetic Development Baselines**: The initial baseline models are trained on synthetic normal traffic matching service profiles. Real-world accuracy will depend on continuous telemetry retraining.
-2. **Administrative Operation Protection**: In this development phase, `/api/v1/ml/train` is designed for administrative execution and restricted to local network binding. Production environments require OAuth2 / RBAC guards.
-3. **Observation Window Aggregation**: A minimum of 3 events per window is required before evaluating behavioral anomaly patterns to avoid false alarms on isolated transactions.
-4. **Non-Blocking Observability**: The ML engine functions as a passive behavioral observer. It generates explainable security incidents for SOC review without blocking core microservice operations.
+1. **Synthetic Development Baselines**: The initial baseline models are trained on synthetic normal traffic matching service profiles. Real-world accuracy requires continuous retraining from verified production logs.
+2. **Administrative Operation Protection**: Administrative training endpoints (`/api/v1/ml/train` and `/api/v1/ml/lstm/train`) are currently restricted to local network binding during development. Production deployment requires OAuth2 / RBAC guards.
+3. **Sequence Length Context Requirement**: A minimum sequence of 20 consecutive events for a single service identity is required before evaluating LSTM sequential patterns.
+4. **Passive Monitoring vs. Active Blocking**: The detection tiers operate as analytical observers and incident generators; they do not terminate active client connections.

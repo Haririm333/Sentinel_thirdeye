@@ -1,0 +1,105 @@
+{
+  "model_id": "lstm_srv-helpdeskr-agent_v1.0.0",
+  "model_version": "1.0.0",
+  "service_identity": "srv-helpdeskr-agent",
+  "created_at": "2026-11-19T22:00:47.199055+00:00",
+  "feature_schema_version": "1.0.0",
+  "feature_names": [
+    "request_size_bytes",
+    "response_size_bytes",
+    "total_bytes",
+    "is_write",
+    "is_read",
+    "is_failed",
+    "is_unusual_method",
+    "time_of_day_deviation",
+    "time_delta_seconds",
+    "is_vendor_access",
+    "is_new_endpoint",
+    "source_ip_novelty",
+    "is_sensitive_resource",
+    "is_permission_violation",
+    "endpoint_ordinal"
+  ],
+  "feature_count": 15,
+  "calibrated_threshold": 0.5342923998832703,
+  "training_sequence_count": 91,
+  "config": {
+    "input_dim": 15,
+    "hidden_dim": 32,
+    "latent_dim": 16,
+    "seq_len": 20,
+    "num_layers": 1
+  },
+  "hyperparameters": {
+    "hidden_dim": 32,
+    "latent_dim": 16,
+    "seq_len": 20,
+    "epochs": 25,
+    "batch_size": 16,
+    "learning_rate": 0.005
+  },
+  "feature_error_baselines": {
+    "request_size_bytes": {
+      "mean_error": 1.0422,
+      "std_error": 0.4269
+    },
+    "response_size_bytes": {
+      "mean_error": 0.9229,
+      "std_error": 0.3792
+    },
+    "total_bytes": {
+      "mean_error": 0.9803,
+      "std_error": 0.4021
+    },
+    "is_write": {
+      "mean_error": 0.5946,
+      "std_error": 0.2479
+    },
+    "is_read": {
+      "mean_error": 0.5932,
+      "std_error": 0.2473
+    },
+    "is_failed": {
+      "mean_error": 0.0006,
+      "std_error": 0.0102
+    },
+    "is_unusual_method": {
+      "mean_error": 0.0002,
+      "std_error": 0.0101
+    },
+    "time_of_day_deviation": {
+      "mean_error": 0.0004,
+      "std_error": 0.0102
+    },
+    "time_delta_seconds": {
+      "mean_error": 0.9288,
+      "std_error": 0.3815
+    },
+    "is_vendor_access": {
+      "mean_error": 0.0001,
+      "std_error": 0.01
+    },
+    "is_new_endpoint": {
+      "mean_error": 0.0001,
+      "std_error": 0.01
+    },
+    "source_ip_novelty": {
+      "mean_error": 0.0002,
+      "std_error": 0.0101
+    },
+    "is_sensitive_resource": {
+      "mean_error": 0.0006,
+      "std_error": 0.0102
+    },
+    "is_permission_violation": {
+      "mean_error": 0.0005,
+      "std_error": 0.0102
+    },
+    "endpoint_ordinal": {
+      "mean_error": 0.9023,
+      "std_error": 0.3709
+    }
+  },
+  "model_status": "READY"
+}

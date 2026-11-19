@@ -53,3 +53,32 @@ $$\text{deviation} = \begin{cases}
 Measures cadence uniformity:
 $$\sigma^2_t = \frac{1}{N - 1} \sum_{i=1}^{N-1} (\Delta t_i - \overline{\Delta t})^2$$
 Where $\Delta t_i = t_{i+1} - t_i$. Near-zero variance indicates automated script or bot activity.
+
+---
+
+## 4. Phase 4: Sequential Feature Specification for LSTM Autoencoder
+
+The LSTM Autoencoder operates on chronological sequence matrices of shape $(20, 15)$ representing 20 consecutive events for a single service identity. The features per event step are:
+
+| Index | Feature Name | Description | Source Field |
+|:---:|:---|:---|:---|
+| 1 | `request_size_bytes` | Payload size of the request in bytes. | `request_size_bytes` |
+| 2 | `response_size_bytes` | Payload size of the response in bytes. | `response_size_bytes` |
+| 3 | `total_bytes` | Sum of request and response bytes. | Computed |
+| 4 | `is_write` | Binary indicator (1.0 for `POST`, `PUT`, `PATCH`, `DELETE`). | `http_method` |
+| 5 | `is_read` | Binary indicator (1.0 for `GET`, `HEAD`, `OPTIONS`). | `http_method` |
+| 6 | `is_failed` | Binary indicator (1.0 if HTTP status code $\ge 400$). | `http_status_code` |
+| 7 | `is_unusual_method` | Binary indicator (1.0 for `PATCH`, `DELETE`, `OPTIONS`, `HEAD`).| `http_method` |
+| 8 | `time_of_day_deviation` | Distance from business hours (08:00–19:00 UTC) $[0.0, 1.0]$. | `timestamp` |
+| 9 | `time_delta_seconds` | Elapsed seconds since previous sequence event ($\Delta t$). | $\text{timestamp}_t - \text{timestamp}_{t-1}$ |
+| 10 | `is_vendor_access` | Binary indicator (1.0 if accessing vendor profile or record). | `resource_type`, `endpoint` |
+| 11 | `is_new_endpoint` | Binary indicator (1.0 if endpoint is absent from baseline). | `endpoint` |
+| 12 | `source_ip_novelty` | Binary indicator (1.0 if source IP is outside sanctioned list). | `source_ip` |
+| 13 | `is_sensitive_resource`| Binary indicator (1.0 for banking, database dump, or config). | `resource_type`, `action` |
+| 14 | `is_permission_violation`| Binary indicator (1.0 if method violates service policy). | Policy check |
+| 15 | `endpoint_ordinal` | Normalized endpoint categorical ordinal $[0.0, 1.0]$. | `endpoint` hash bucket |
+
+### Sequential Consistency
+- Chronological sorting is strictly enforced on each sequence before feature extraction.
+- $\Delta t$ looks strictly backward ($t - (t-1)$), preventing future data leakage.
+- Service identities are never mixed within a sequence.
