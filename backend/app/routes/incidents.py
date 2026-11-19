@@ -115,6 +115,11 @@ def get_incident(
         404: {"description": "Incident not found"}
     }
 )
+@router.put(
+    "/api/v1/incidents/{incident_id}/status",
+    response_model=IncidentResponse,
+    include_in_schema=False
+)
 def patch_incident_status(
     incident_id: str,
     update_data: IncidentStatusUpdate,

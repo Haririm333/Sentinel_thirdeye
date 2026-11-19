@@ -161,6 +161,28 @@ def test_patch_incident_status_transitions(client, db_session, sample_valid_even
     assert res3.status_code == status.HTTP_400_BAD_REQUEST
     assert "InvalidStatusTransitionError" in res3.json()["detail"]["error"]
 
+    # 4. PUT also supported on /status endpoint for idempotent updates
+    res_put = client.put(
+        f"/api/v1/incidents/{incident.incident_id}/status",
+        json={"status": "INVESTIGATING", "notes": "Re-opened for deeper inspection"}
+    )
+    assert res_put.status_code == status.HTTP_200_OK
+    assert res_put.json()["status"] == "INVESTIGATING"
+
+    # 5. Invalid status value rejected by schema validation
+    res_invalid_val = client.patch(
+        f"/api/v1/incidents/{incident.incident_id}/status",
+        json={"status": "INVALID_STATE"}
+    )
+    assert res_invalid_val.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    # 6. Verify PATCH directly to /api/v1/incidents/{incident_id} returns 405 Method Not Allowed
+    res_405 = client.patch(
+        f"/api/v1/incidents/{incident.incident_id}",
+        json={"status": "RESOLVED"}
+    )
+    assert res_405.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
 
 def test_get_detection_rules_and_summary_apis(client):
     """Verify detection rules inspection and telemetry summary endpoints."""

@@ -46,11 +46,17 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
   const handleUpdateStatus = async (newStatus: IncidentStatus) => {
     try {
       setUpdating(true);
-      const updated = await updateIncidentStatus(incident.incident_id, newStatus as any);
+      const updated = await updateIncidentStatus(incident.incident_id, newStatus);
       setStatusMessage(`Incident successfully marked as ${newStatus}`);
       onStatusUpdated(updated);
     } catch (err: any) {
-      setStatusMessage(`Error: ${err?.response?.data?.message || err.message}`);
+      const errMsg =
+        typeof err?.response?.data?.detail === 'string'
+          ? err.response.data.detail
+          : err?.response?.data?.detail?.message ||
+            err?.response?.data?.message ||
+            err.message;
+      setStatusMessage(`Error: ${errMsg}`);
     } finally {
       setUpdating(false);
     }

@@ -2,6 +2,7 @@ import axios from 'axios';
 import {
   ApiEvent,
   Incident,
+  IncidentStatus,
   AssessmentSummary,
   UnifiedAssessment,
   BankChangeRequest,
@@ -71,9 +72,13 @@ export const getIncidentById = async (incidentId: string): Promise<Incident> => 
 
 export const updateIncidentStatus = async (
   incidentId: string,
-  status: 'INVESTIGATING' | 'RESOLVED' | 'FALSE_POSITIVE'
+  status: IncidentStatus,
+  notes?: string
 ): Promise<Incident> => {
-  const res = await apiClient.patch(`/api/v1/incidents/${incidentId}`, { status });
+  const res = await apiClient.patch(`/api/v1/incidents/${incidentId}/status`, {
+    status,
+    notes: notes || `Status updated to ${status} via SOC dashboard`,
+  });
   return res.data;
 };
 
