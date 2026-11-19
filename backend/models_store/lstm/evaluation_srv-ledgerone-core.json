@@ -5,15 +5,15 @@
   "evaluation_sequences_count": 45,
   "metrics": {
     "precision": 1.0,
-    "recall": 0.9333,
-    "f1_score": 0.9655,
+    "recall": 1.0,
+    "f1_score": 1.0,
     "false_positive_rate": 0.0
   },
   "confusion_matrix": {
-    "true_positives": 14,
+    "true_positives": 15,
     "false_positives": 0,
     "true_negatives": 30,
-    "false_negatives": 1
+    "false_negatives": 0
   },
   "scenario_detection_rates": {
     "high_frequency_burst": {
@@ -38,8 +38,8 @@
     },
     "shadow_api_probing": {
       "tested_samples": 2,
-      "detected_samples": 1,
-      "detection_rate": 0.5
+      "detected_samples": 2,
+      "detection_rate": 1.0
     },
     "robotic_uniform_polling": {
       "tested_samples": 2,
@@ -48,7 +48,7 @@
     }
   },
   "performance_profile": {
-    "avg_inference_latency_ms": 4.5,
+    "avg_inference_latency_ms": 5.09,
     "training_duration_seconds": 0.0,
     "device": "cpu",
     "sequence_length": 20,
@@ -57,8 +57,8 @@
   "model_comparison": {
     "lstm_autoencoder": {
       "precision": 1.0,
-      "recall": 0.9333,
-      "f1_score": 0.9655,
+      "recall": 1.0,
+      "f1_score": 1.0,
       "false_positive_rate": 0.0,
       "strength": "Excels at detecting multi-step transitions, cadence/rhythm changes, and sequential order shifts"
     },

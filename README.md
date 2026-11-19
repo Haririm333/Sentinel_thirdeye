@@ -1,5 +1,5 @@
 # SENTINEL: API Behaviour Monitoring & Suspicious Activity Detection System
-## Phases 1, 2, 3, 4, 5 & 6: Foundation, Deterministic Rules, Isolation Forest ML, LSTM Sequential Anomaly Detection, Two-Person Bank Change Enforcement, and Unified Detection Integration
+## Phases 1–7: Foundation, Deterministic Rules, Isolation Forest ML, LSTM Sequential Anomaly Detection, Two-Person Bank Change Enforcement, Unified Detection Integration, and SOC Security Monitoring Dashboard
 
 ---
 
@@ -504,7 +504,34 @@ pytest -v
 
 ---
 
-## 17. Security Considerations & Limitations
+## 18. Phase 7: SOC Security Monitoring Dashboard
+
+### Overview
+Phase 7 provides a modern, responsive, dark navy Security Operations Center (SOC) web console built with **React 19**, **TypeScript**, **Vite**, and **Tailwind CSS**. It connects directly to the FastAPI backend and visualizes all analytical subsystems.
+
+### Features & Modules
+1. **Security Overview**: Live metrics, incident severity distribution chart (Recharts), detection component triggers, and recent suspicious events table.
+2. **Live API Monitoring**: Streamed API event table with auto-refresh/pause controls, search filters, and an interactive slide-over drawer with on-demand multi-tier AI evaluation.
+3. **Incident Management**: Multi-filter triage table (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `OPEN`, `INVESTIGATING`, `RESOLVED`, `FALSE_POSITIVE`) with detailed forensic modal and real-time status transitions (`PATCH /api/v1/incidents/{incident_id}`).
+4. **AI Detection Subsystems**: Status overview and calibration metrics for Isolation Forest and PyTorch LSTM Autoencoder, highlighting the 15-dimensional feature schema and fail-safe missing model handling.
+5. **Two-Person Bank Change Approval**: 4-step dual-human separation-of-duties visualization, strictly masked financial details (`ACC-***masked***XXXX`), linked security incident warnings, and anti-self-approval / anti-duplicate-approver UI guards.
+6. **Immutable Audit Trail**: Read-only chronological audit log of all financial modifications and approvals with client IP and forensic state snapshots.
+7. **Simulated Identity Switcher**: Header control to switch between Sarah Jenkins (Requester), Elena Rostova (Approver 1), David Sterling (Approver 2), Alex Vance (Admin), and Rachel Thorne (Auditor) to interactively verify RBAC enforcement.
+
+### Running the Full System (Backend + Frontend)
+
+#### Terminal 1: FastAPI Backend
+```powershell
+python -m uvicorn sentinel.backend.app.main:app --host 127.0.0.1 --port 8000
+```
+
+#### Terminal 2: React SOC Dashboard
+```powershell
+cd sentinel\frontend
+npm run dev
+```
+Navigate to `http://127.0.0.1:5173` in your browser.
+
 
 1. **Synthetic Development Baselines**: The initial baseline models are trained on synthetic normal traffic matching service profiles. Real-world accuracy requires continuous retraining from verified production logs.
 2. **Administrative Operation Protection**: Administrative training endpoints (`/api/v1/ml/train` and `/api/v1/ml/lstm/train`) are currently restricted to local network binding during development. Production deployment requires OAuth2 / RBAC guards.
