@@ -48,7 +48,7 @@
     }
   },
   "performance_profile": {
-    "avg_inference_latency_ms": 3.47,
+    "avg_inference_latency_ms": 4.5,
     "training_duration_seconds": 0.0,
     "device": "cpu",
     "sequence_length": 20,

@@ -72,6 +72,8 @@ class BankChangeRequest(Base):
     expires_at = Column(DateTime(timezone=True), nullable=False)
     rejection_reason = Column(Text, nullable=True)
     cancelled_by = Column(String(64), nullable=True)
+    linked_incident_ids = Column(JSON, nullable=True, default=list)
+    risk_assessment_snapshot = Column(JSON, nullable=True, default=dict)
 
     # Relationships
     vendor = relationship("VendorBankAccount", backref="change_requests")

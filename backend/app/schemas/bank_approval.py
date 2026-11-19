@@ -76,6 +76,9 @@ class BankChangeResponse(BaseModel):
     expires_at: datetime
     rejection_reason: Optional[str] = None
     cancelled_by: Optional[str] = None
+    linked_incident_ids: List[str] = []
+    risk_assessment_snapshot: Optional[Dict[str, Any]] = None
+    security_warnings: List[str] = []
 
     model_config = ConfigDict(from_attributes=True)
 

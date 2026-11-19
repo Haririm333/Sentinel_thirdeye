@@ -1,5 +1,5 @@
 # SENTINEL: API Behaviour Monitoring & Suspicious Activity Detection System
-## Phases 1, 2, 3, 4 & 5: Foundation, Deterministic Rules, Isolation Forest ML, LSTM Sequential Anomaly Detection, and Two-Person Bank Change Enforcement
+## Phases 1, 2, 3, 4, 5 & 6: Foundation, Deterministic Rules, Isolation Forest ML, LSTM Sequential Anomaly Detection, Two-Person Bank Change Enforcement, and Unified Detection Integration
 
 ---
 
@@ -14,6 +14,7 @@
 - In **Phase 3**, SENTINEL integrated an unsupervised machine learning anomaly detection subsystem using **Scikit-learn Isolation Forest**. The ML engine extracts 15 numerical behavioral features across sliding observation windows, calibrates anomaly thresholds against service-specific baselines, enforces data sufficiency guards, ranks feature deviations via Z-scores, and generates correlated `ML-ANOMALY-ISOFOR-001` incidents.
 - In **Phase 4**, SENTINEL added deep learning **sequential anomaly detection** using a PyTorch **LSTM Autoencoder** (13,695 parameters). It models chronological sequences of 20 API events per service, extracts 15 compatible sequential features without PII, normalizes features on training sequences only, calculates reconstruction Mean Squared Error (MSE), attributes feature-level errors, and generates correlated `ML-ANOMALY-LSTM-001` incidents.
 - In **Phase 5**, SENTINEL implements **Two-Person Approval and Atomic Bank Change Enforcement** for sensitive vendor bank accounts. No vendor account update activates without two distinct human approvals. Requesters cannot self-approve, approvers cannot sign off twice, requests are cryptographically bound via SHA-256 canonical fingerprints, sensitive account details are Fernet-encrypted at rest and masked in responses (`ACC-***masked***1048`), and atomic row locks ensure zero race conditions. AI detection operates strictly as analytical observation and never authorizes bank modifications.
+- In **Phase 6**, SENTINEL unifies all detection subsystems into an integrated security assessment engine. It computes synergistic risk scores across deterministic rules, Isolation Forest, and LSTM sequential autoencoders using a deterministic hard floor and multi-tier compounding boosts (never blind averaging). It surfaces security incident warnings and risk snapshots directly to authorized finance personnel during bank change requests, while strictly upholding the non-bypass invariant: **AI risk scores never replace human approvals**.
 
 ---
 
@@ -446,9 +447,48 @@ Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/bank-changes/$requestId/aud
 
 ---
 
-## 15. Automated Test Suite (93 Passing Tests)
+## 15. Phase 6: Unified Risk Assessment & Detection Integration
 
-Run the complete test suite verifying Phase 1, Phase 2, Phase 3, Phase 4, and Phase 5:
+### Synergistic Risk Aggregation Formula
+1. **Deterministic Hard Floor**: $S_{\text{base}} = \max(S_{\text{rule}}, S_{\text{if}}, S_{\text{lstm}})$
+2. **Missing Model Invariant**: If a model is `UNAVAILABLE` or `INSUFFICIENT_DATA`, it has `evaluated=False` and is explicitly reported (never assumed normal).
+3. **Cross-Tier Synergy Boosts**:
+   - Dual confirmation (Rule + ML or IF + LSTM): $+10$ points
+   - Triple confirmation (Rule + IF + LSTM): $+15$ points
+4. **Clamping**: $\text{Final Risk Score} = \min(100, \max(0, S_{\text{base}} + \text{boost}))$
+5. **AI Non-Bypass Invariant**: AI risk scores never authorize bank changes; two distinct human approvals remain mandatory.
+
+### Live PowerShell Verification Commands
+
+#### A. Unified Assessment for an Event
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/assessment/events/<event_id>" `
+  -Method Get -Headers @{ "X-User-Id" = "usr_audit_rachel" } | ConvertTo-Json -Depth 6
+```
+
+#### B. Unified Detection Analytics & System Readiness Summary
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/assessment/summary" `
+  -Method Get -Headers @{ "X-User-Id" = "usr_audit_rachel" } | ConvertTo-Json -Depth 5
+```
+
+#### C. Combined Incident Assessment Details
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/incidents/<incident_id>/assessment" `
+  -Method Get -Headers @{ "X-User-Id" = "usr_audit_rachel" } | ConvertTo-Json -Depth 6
+```
+
+#### D. Bank Change Linked Security Risk Assessment & Warnings
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/bank-changes/<request_id>/risk-assessment" `
+  -Method Get -Headers @{ "X-User-Id" = "usr_appr_elena" } | ConvertTo-Json -Depth 6
+```
+
+---
+
+## 16. Automated Test Suite (103 Passing Tests)
+
+Run the complete test suite verifying Phase 1, Phase 2, Phase 3, Phase 4, Phase 5, and Phase 6:
 ```powershell
 cd "e:\project crimathon\drive-download-20261119T081747Z-1-001\pipeline buid\sentinel\backend"
 pytest -v
@@ -460,10 +500,11 @@ pytest -v
 - **Phase 3 Isolation Forest (18 tests)**: 15-feature extraction, empty/missing event tolerance, model training & Joblib persistence roundtrip, normal vs anomalous scoring, baseline sufficiency enforcement, ML incident integration, and ML REST API.
 - **Phase 4 LSTM Autoencoder (22 tests)**: Sequence generation, chronological ordering, service isolation, train-only normalization, PyTorch forward pass, reconstruction loss, safe state_dict persistence/loading, normal sequence reconstruction, multi-step attack sequence detection, ML-ANOMALY-LSTM-001 incident generation, deduplication, fault tolerance, and LSTM REST API.
 - **Phase 5 Two-Person Bank Approval (14 tests)**: Strict two-person rule, anti-self-approval rejection, anti-duplicate approver rejection, active account invariance until commit, atomic commit with row-locking, rejection workflow, cancellation workflow, expiration handling, tamper detection via cryptographic fingerprint mismatch, modification and approval invalidation, sensitive data masking guarantee, and SEC-RULE-BANK-001 incident correlation.
+- **Phase 6 Unified Assessment & Detection Integration (10 tests)**: Synergistic risk aggregation, missing model handling (never assumed normal), deterministic hard floor, multi-tier compounding boosts, on-demand evaluation API, combined incident assessment, unified detection analytics summary, bank change risk association with security warnings, AI non-bypass invariant, and sensitive data masking in assessments.
 
 ---
 
-## 16. Security Considerations & Limitations
+## 17. Security Considerations & Limitations
 
 1. **Synthetic Development Baselines**: The initial baseline models are trained on synthetic normal traffic matching service profiles. Real-world accuracy requires continuous retraining from verified production logs.
 2. **Administrative Operation Protection**: Administrative training endpoints (`/api/v1/ml/train` and `/api/v1/ml/lstm/train`) are currently restricted to local network binding during development. Production deployment requires OAuth2 / RBAC guards.

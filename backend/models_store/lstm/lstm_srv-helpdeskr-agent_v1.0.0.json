@@ -2,7 +2,7 @@
   "model_id": "lstm_srv-helpdeskr-agent_v1.0.0",
   "model_version": "1.0.0",
   "service_identity": "srv-helpdeskr-agent",
-  "created_at": "2026-11-19T22:17:25.805261+00:00",
+  "created_at": "2026-11-19T22:43:23.552602+00:00",
   "feature_schema_version": "1.0.0",
   "feature_names": [
     "request_size_bytes",
@@ -22,7 +22,7 @@
     "endpoint_ordinal"
   ],
   "feature_count": 15,
-  "calibrated_threshold": 0.5345784425735474,
+  "calibrated_threshold": 0.5323815941810608,
   "training_sequence_count": 91,
   "config": {
     "input_dim": 15,
@@ -41,48 +41,48 @@
   },
   "feature_error_baselines": {
     "request_size_bytes": {
-      "mean_error": 1.0109,
-      "std_error": 0.4144
+      "mean_error": 1.0301,
+      "std_error": 0.4221
     },
     "response_size_bytes": {
-      "mean_error": 0.9295,
-      "std_error": 0.3818
+      "mean_error": 0.9492,
+      "std_error": 0.3897
     },
     "total_bytes": {
-      "mean_error": 0.9908,
-      "std_error": 0.4063
+      "mean_error": 1.0115,
+      "std_error": 0.4146
     },
     "is_write": {
-      "mean_error": 0.5884,
-      "std_error": 0.2453
+      "mean_error": 0.6262,
+      "std_error": 0.2605
     },
     "is_read": {
-      "mean_error": 0.6025,
-      "std_error": 0.251
+      "mean_error": 0.64,
+      "std_error": 0.266
     },
     "is_failed": {
-      "mean_error": 0.0002,
+      "mean_error": 0.0001,
       "std_error": 0.0101
     },
     "is_unusual_method": {
-      "mean_error": 0.0003,
-      "std_error": 0.0101
-    },
-    "time_of_day_deviation": {
-      "mean_error": 0.0006,
+      "mean_error": 0.0007,
       "std_error": 0.0103
     },
+    "time_of_day_deviation": {
+      "mean_error": 0.0001,
+      "std_error": 0.01
+    },
     "time_delta_seconds": {
-      "mean_error": 0.9234,
-      "std_error": 0.3794
+      "mean_error": 0.8513,
+      "std_error": 0.3505
     },
     "is_vendor_access": {
-      "mean_error": 0.0006,
-      "std_error": 0.0102
+      "mean_error": 0.0002,
+      "std_error": 0.0101
     },
     "is_new_endpoint": {
-      "mean_error": 0.0003,
-      "std_error": 0.0101
+      "mean_error": 0.0005,
+      "std_error": 0.0102
     },
     "source_ip_novelty": {
       "mean_error": 0.0003,
@@ -90,15 +90,15 @@
     },
     "is_sensitive_resource": {
       "mean_error": 0.0004,
-      "std_error": 0.0101
+      "std_error": 0.0102
     },
     "is_permission_violation": {
-      "mean_error": 0.0007,
-      "std_error": 0.0103
+      "mean_error": 0.0002,
+      "std_error": 0.0101
     },
     "endpoint_ordinal": {
-      "mean_error": 1.0239,
-      "std_error": 0.4196
+      "mean_error": 0.9171,
+      "std_error": 0.3768
     }
   },
   "model_status": "READY"

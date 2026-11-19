@@ -77,7 +77,10 @@ def _to_response_dict(req) -> dict:
         "updated_at": req.updated_at,
         "expires_at": req.expires_at,
         "rejection_reason": req.rejection_reason,
-        "cancelled_by": req.cancelled_by
+        "cancelled_by": req.cancelled_by,
+        "linked_incident_ids": getattr(req, "linked_incident_ids", []) or [],
+        "risk_assessment_snapshot": getattr(req, "risk_assessment_snapshot", {}) or {},
+        "security_warnings": (getattr(req, "risk_assessment_snapshot", {}) or {}).get("security_warnings", [])
     }
 
 

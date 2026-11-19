@@ -30,6 +30,16 @@ from sentinel.backend.app.schemas.bank_approval import (
     AuditLogResponse,
     VendorBankAccountResponse
 )
+from sentinel.backend.app.schemas.unified_assessment import (
+    RuleFindingSchema,
+    IsolationForestFindingSchema,
+    LSTMFindingSchema,
+    ModelReadinessSchema,
+    UnifiedAssessmentResponse,
+    UnifiedSummaryResponse,
+    IncidentAssessmentResponse,
+    BankChangeRiskAssessmentResponse
+)
 
 __all__ = [
     "EventCreate",

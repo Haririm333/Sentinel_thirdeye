@@ -2,7 +2,7 @@
   "model_id": "lstm_srv-ledgerone-core_v1.0.0",
   "model_version": "1.0.0",
   "service_identity": "srv-ledgerone-core",
-  "created_at": "2026-11-19T22:17:24.208218+00:00",
+  "created_at": "2026-11-19T22:43:21.787399+00:00",
   "feature_schema_version": "1.0.0",
   "feature_names": [
     "request_size_bytes",
@@ -22,7 +22,7 @@
     "endpoint_ordinal"
   ],
   "feature_count": 15,
-  "calibrated_threshold": 0.43056946992874146,
+  "calibrated_threshold": 0.39557886123657227,
   "training_sequence_count": 91,
   "config": {
     "input_dim": 15,
@@ -41,20 +41,20 @@
   },
   "feature_error_baselines": {
     "request_size_bytes": {
-      "mean_error": 0.9841,
-      "std_error": 0.4036
+      "mean_error": 0.9769,
+      "std_error": 0.4008
     },
     "response_size_bytes": {
-      "mean_error": 0.9294,
-      "std_error": 0.3818
+      "mean_error": 0.936,
+      "std_error": 0.3844
     },
     "total_bytes": {
-      "mean_error": 0.9708,
-      "std_error": 0.3983
+      "mean_error": 0.9785,
+      "std_error": 0.4014
     },
     "is_write": {
-      "mean_error": 0.0002,
-      "std_error": 0.0101
+      "mean_error": 0.0001,
+      "std_error": 0.01
     },
     "is_read": {
       "mean_error": 0.0002,
@@ -65,40 +65,40 @@
       "std_error": 0.0101
     },
     "is_unusual_method": {
-      "mean_error": 0.0003,
-      "std_error": 0.0101
+      "mean_error": 0.0005,
+      "std_error": 0.0102
     },
     "time_of_day_deviation": {
-      "mean_error": 0.0001,
-      "std_error": 0.0101
+      "mean_error": 0.0004,
+      "std_error": 0.0102
     },
     "time_delta_seconds": {
-      "mean_error": 0.8952,
-      "std_error": 0.3681
+      "mean_error": 0.9193,
+      "std_error": 0.3777
     },
     "is_vendor_access": {
       "mean_error": 0.0001,
       "std_error": 0.01
     },
     "is_new_endpoint": {
-      "mean_error": 0.0004,
-      "std_error": 0.0102
+      "mean_error": 0.0002,
+      "std_error": 0.0101
     },
     "source_ip_novelty": {
-      "mean_error": 0.0003,
+      "mean_error": 0.0002,
       "std_error": 0.0101
     },
     "is_sensitive_resource": {
-      "mean_error": 0.0002,
-      "std_error": 0.0101
+      "mean_error": 0.0001,
+      "std_error": 0.01
     },
     "is_permission_violation": {
       "mean_error": 0.0001,
       "std_error": 0.01
     },
     "endpoint_ordinal": {
-      "mean_error": 1.0699,
-      "std_error": 0.438
+      "mean_error": 0.9333,
+      "std_error": 0.3833
     }
   },
   "model_status": "READY"

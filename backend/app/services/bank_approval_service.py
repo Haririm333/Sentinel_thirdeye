@@ -204,6 +204,11 @@ def create_bank_change_request(
     request_id = str(uuid.uuid4())
     expires_at = utc_now() + timedelta(hours=settings.BANK_CHANGE_EXPIRY_HOURS)
 
+    # 5b. Assess Prior Security Incidents & Associated Risk (Phase 6 Integration)
+    from sentinel.backend.app.services.unified_assessment_service import assess_bank_change_risk
+    risk_snapshot = assess_bank_change_risk(db=db, vendor_id=vendor.vendor_id, requester_id=requester.user_id)
+    linked_incident_ids = risk_snapshot.get("linked_incident_ids", [])
+
     # 6. Instantiate and persist request
     change_request = BankChangeRequest(
         request_id=request_id,
@@ -218,6 +223,8 @@ def create_bank_change_request(
         status="PENDING_APPROVAL",
         fingerprint=fingerprint,
         version=version,
+        linked_incident_ids=linked_incident_ids,
+        risk_assessment_snapshot=risk_snapshot,
         created_at=utc_now(),
         updated_at=utc_now(),
         expires_at=expires_at
@@ -237,7 +244,9 @@ def create_bank_change_request(
             "proposed_account_ref": proposed_ref,
             "fingerprint": fingerprint,
             "client_ip": client_ip,
-            "expires_at": expires_at.isoformat()
+            "expires_at": expires_at.isoformat(),
+            "linked_incident_ids": linked_incident_ids,
+            "security_warnings": risk_snapshot.get("security_warnings", [])
         }
     )
 
