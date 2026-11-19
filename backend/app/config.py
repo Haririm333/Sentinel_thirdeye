@@ -34,6 +34,14 @@ class Settings(BaseSettings):
     # Monitoring scope
     ALLOWED_SOURCE_SYSTEMS: List[str] = ["LedgerOne", "HelpDeskr", "TallyBridge"]
     
+    # Phase 5: Two-Person Bank Approval & Encryption
+    BANK_ENCRYPTION_KEY: str = Field(
+        default="dp7ITpkyfy7ZAOqoNdOyh3ED_VeICwYZTziKHBsNGzk=",
+        description="Fernet/AES key for sensitive bank data at rest"
+    )
+    BANK_APPROVALS_REQUIRED: int = Field(default=2, description="Number of distinct human approvals required")
+    BANK_CHANGE_EXPIRY_HOURS: int = Field(default=48, description="Hours before pending change request expires")
+    
     # Metadata
     PROJECT_NAME: str = "SENTINEL API Activity Monitor"
     VERSION: str = "1.0.0"

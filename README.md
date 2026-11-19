@@ -1,10 +1,10 @@
 # SENTINEL: API Behaviour Monitoring & Suspicious Activity Detection System
-## Phases 1, 2, 3 & 4: Foundation, Deterministic Rules, Isolation Forest ML, and LSTM Autoencoder Sequential Anomaly Detection
+## Phases 1, 2, 3, 4 & 5: Foundation, Deterministic Rules, Isolation Forest ML, LSTM Sequential Anomaly Detection, and Two-Person Bank Change Enforcement
 
 ---
 
 ## 1. Project Overview
-**SENTINEL** is an enterprise-grade cybersecurity monitoring platform that continuously analyzes API telemetry from three interconnected enterprise systems:
+**SENTINEL** is an enterprise-grade cybersecurity monitoring and transaction authorization platform that continuously analyzes API telemetry from three interconnected enterprise systems:
 1. **LedgerOne**: Core financial management and vendor disbursement platform.
 2. **HelpDeskr**: Enterprise customer and vendor ticketing support system.
 3. **TallyBridge**: Integration software synchronizing accounting and financial data with LedgerOne.
@@ -12,7 +12,8 @@
 - In **Phase 1**, SENTINEL established high-throughput event ingestion, schema enforcement, sensitive data sanitization, cryptographic integrity hashing, and PostgreSQL storage.
 - In **Phase 2**, SENTINEL added an inline, modular, deterministic security detection engine that evaluates every incoming API event against configurable security rules, generating explainable security incidents with severity bands, risk scores (0–100), and structured evidence.
 - In **Phase 3**, SENTINEL integrated an unsupervised machine learning anomaly detection subsystem using **Scikit-learn Isolation Forest**. The ML engine extracts 15 numerical behavioral features across sliding observation windows, calibrates anomaly thresholds against service-specific baselines, enforces data sufficiency guards, ranks feature deviations via Z-scores, and generates correlated `ML-ANOMALY-ISOFOR-001` incidents.
-- In **Phase 4**, SENTINEL adds deep learning **sequential anomaly detection** using a PyTorch **LSTM Autoencoder** (13,695 parameters). It models chronological sequences of 20 API events per service, extracts 15 compatible sequential features without PII, normalizes features on training sequences only, calculates reconstruction Mean Squared Error (MSE), attributes feature-level errors, and generates correlated `ML-ANOMALY-LSTM-001` incidents.
+- In **Phase 4**, SENTINEL added deep learning **sequential anomaly detection** using a PyTorch **LSTM Autoencoder** (13,695 parameters). It models chronological sequences of 20 API events per service, extracts 15 compatible sequential features without PII, normalizes features on training sequences only, calculates reconstruction Mean Squared Error (MSE), attributes feature-level errors, and generates correlated `ML-ANOMALY-LSTM-001` incidents.
+- In **Phase 5**, SENTINEL implements **Two-Person Approval and Atomic Bank Change Enforcement** for sensitive vendor bank accounts. No vendor account update activates without two distinct human approvals. Requesters cannot self-approve, approvers cannot sign off twice, requests are cryptographically bound via SHA-256 canonical fingerprints, sensitive account details are Fernet-encrypted at rest and masked in responses (`ACC-***masked***1048`), and atomic row locks ensure zero race conditions. AI detection operates strictly as analytical observation and never authorizes bank modifications.
 
 ---
 
@@ -376,9 +377,78 @@ Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/ml/lstm/anomalies" -Method 
 
 ---
 
-## 14. Automated Test Suite (79 Passing Tests)
+## 14. Phase 5: Two-Person Bank Change Approval Engine
 
-Run the complete test suite verifying Phase 1, Phase 2, Phase 3, and Phase 4:
+### Core Enforcement Principles
+1. **Strict Two-Person Rule**: No bank change can commit until two distinct authorized human approvers sign off.
+2. **Anti-Self-Approval**: The requester cannot approve their own request (`403 SelfApprovalProhibited`).
+3. **Anti-Duplicate Approval**: The same approver cannot sign off twice (`400 DuplicateApprovalProhibited`).
+4. **Old Account Invariance**: The existing active bank account remains active until Step 8 of the second approval commits.
+5. **Cryptographic Binding**: All approvals are bound to a canonical SHA-256 fingerprint; modifications invalidate prior approvals and reset status.
+6. **Encryption & Masking**: Proposed details are Fernet-encrypted at rest (AES-128-CBC + HMAC-SHA256); API responses only expose masked references (`ACC-***masked***1048`).
+7. **Concurrency Safety**: Atomic row-level locks (`SELECT ... FOR UPDATE`) prevent race conditions during approvals and commits.
+8. **Deterministic Enforcement**: ML anomaly scores never authorize bank changes; authorization is purely deterministic.
+
+### Live PowerShell Verification Commands
+
+#### A. Submit Bank Change Request (as Requester Sarah)
+```powershell
+$createPayload = @{
+    vendor_id = "vnd_10482"
+    proposed_account_number = "998877665544"
+    proposed_bank_name = "Citibank NA"
+    proposed_routing_number = "021000089"
+    request_reason = "Vendor annual corporate treasury account migration"
+} | ConvertTo-Json
+
+$req = Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/bank-changes" `
+  -Method Post -ContentType "application/json" `
+  -Headers @{ "X-User-Id" = "usr_req_sarah" } `
+  -Body $createPayload
+
+$req | ConvertTo-Json -Depth 4
+$requestId = $req.request_id
+```
+
+#### B. First Approval (Approver Elena)
+```powershell
+$appr1 = Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/bank-changes/$requestId/approve" `
+  -Method Post -ContentType "application/json" `
+  -Headers @{ "X-User-Id" = "usr_appr_elena" } `
+  -Body '{"comment": "Verified bank authorization letter with vendor CFO"}'
+
+$appr1 | ConvertTo-Json -Depth 4
+# Status: PARTIALLY_APPROVED | approval_count: 1
+```
+
+#### C. Second Independent Approval (Approver David) -> Commits Change Atomically
+```powershell
+$appr2 = Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/bank-changes/$requestId/approve" `
+  -Method Post -ContentType "application/json" `
+  -Headers @{ "X-User-Id" = "usr_appr_david" } `
+  -Body '{"comment": "Confirmed phone verification callback with treasury officer"}'
+
+$appr2 | ConvertTo-Json -Depth 4
+# Status: COMMITTED | approval_count: 2 | Active vendor account updated!
+```
+
+#### D. Verify Active Vendor Bank Account
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/vendors/vnd_10482/bank-account" `
+  -Method Get -Headers @{ "X-User-Id" = "usr_audit_rachel" } | ConvertTo-Json -Depth 4
+```
+
+#### E. Inspect Complete Immutable Audit Trail
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/bank-changes/$requestId/audit" `
+  -Method Get -Headers @{ "X-User-Id" = "usr_audit_rachel" } | ConvertTo-Json -Depth 5
+```
+
+---
+
+## 15. Automated Test Suite (93 Passing Tests)
+
+Run the complete test suite verifying Phase 1, Phase 2, Phase 3, Phase 4, and Phase 5:
 ```powershell
 cd "e:\project crimathon\drive-download-20261119T081747Z-1-001\pipeline buid\sentinel\backend"
 pytest -v
@@ -389,10 +459,11 @@ pytest -v
 - **Phase 2 Deterministic Rules (18 tests)**: 6 security detection rules (`SEC-RULE-*`), risk scoring, incident correlation & deduplication, triage status lifecycle.
 - **Phase 3 Isolation Forest (18 tests)**: 15-feature extraction, empty/missing event tolerance, model training & Joblib persistence roundtrip, normal vs anomalous scoring, baseline sufficiency enforcement, ML incident integration, and ML REST API.
 - **Phase 4 LSTM Autoencoder (22 tests)**: Sequence generation, chronological ordering, service isolation, train-only normalization, PyTorch forward pass, reconstruction loss, safe state_dict persistence/loading, normal sequence reconstruction, multi-step attack sequence detection, ML-ANOMALY-LSTM-001 incident generation, deduplication, fault tolerance, and LSTM REST API.
+- **Phase 5 Two-Person Bank Approval (14 tests)**: Strict two-person rule, anti-self-approval rejection, anti-duplicate approver rejection, active account invariance until commit, atomic commit with row-locking, rejection workflow, cancellation workflow, expiration handling, tamper detection via cryptographic fingerprint mismatch, modification and approval invalidation, sensitive data masking guarantee, and SEC-RULE-BANK-001 incident correlation.
 
 ---
 
-## 15. Security Considerations & Limitations
+## 16. Security Considerations & Limitations
 
 1. **Synthetic Development Baselines**: The initial baseline models are trained on synthetic normal traffic matching service profiles. Real-world accuracy requires continuous retraining from verified production logs.
 2. **Administrative Operation Protection**: Administrative training endpoints (`/api/v1/ml/train` and `/api/v1/ml/lstm/train`) are currently restricted to local network binding during development. Production deployment requires OAuth2 / RBAC guards.

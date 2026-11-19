@@ -20,6 +20,16 @@ from sentinel.backend.app.schemas.incident import (
     DetectionRuleResponse,
     DetectionSummaryResponse
 )
+from sentinel.backend.app.schemas.bank_approval import (
+    CreateBankChangeRequest,
+    ApprovalActionRequest,
+    RejectActionRequest,
+    CancelActionRequest,
+    BankChangeResponse,
+    ApprovalSummaryResponse,
+    AuditLogResponse,
+    VendorBankAccountResponse
+)
 
 __all__ = [
     "EventCreate",
@@ -33,5 +43,13 @@ __all__ = [
     "IncidentStatusUpdate",
     "IncidentListResponse",
     "DetectionRuleResponse",
-    "DetectionSummaryResponse"
+    "DetectionSummaryResponse",
+    "CreateBankChangeRequest",
+    "ApprovalActionRequest",
+    "RejectActionRequest",
+    "CancelActionRequest",
+    "BankChangeResponse",
+    "ApprovalSummaryResponse",
+    "AuditLogResponse",
+    "VendorBankAccountResponse"
 ]

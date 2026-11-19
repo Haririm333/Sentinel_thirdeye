@@ -8,6 +8,12 @@ from sentinel.backend.app.models.service_identity import ServiceIdentity
 from sentinel.backend.app.models.security_audit import SecurityAuditEvent
 from sentinel.backend.app.models.incident import Incident
 from sentinel.backend.app.models.detection_rule import DetectionRuleModel
+from sentinel.backend.app.models.bank_approval import (
+    VendorBankAccount,
+    BankChangeRequest,
+    BankApproval,
+    ApprovalAuditLog
+)
 
 __all__ = [
     "Base",
@@ -15,5 +21,9 @@ __all__ = [
     "ServiceIdentity",
     "SecurityAuditEvent",
     "Incident",
-    "DetectionRuleModel"
+    "DetectionRuleModel",
+    "VendorBankAccount",
+    "BankChangeRequest",
+    "BankApproval",
+    "ApprovalAuditLog"
 ]
