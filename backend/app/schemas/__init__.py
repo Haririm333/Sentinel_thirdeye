@@ -13,6 +13,13 @@ from sentinel.backend.app.schemas.service import (
     ServiceIdentityResponse
 )
 from sentinel.backend.app.schemas.audit import SecurityAuditEventResponse
+from sentinel.backend.app.schemas.incident import (
+    IncidentResponse,
+    IncidentStatusUpdate,
+    IncidentListResponse,
+    DetectionRuleResponse,
+    DetectionSummaryResponse
+)
 
 __all__ = [
     "EventCreate",
@@ -21,5 +28,10 @@ __all__ = [
     "EventListResponse",
     "ServiceIdentityCreate",
     "ServiceIdentityResponse",
-    "SecurityAuditEventResponse"
+    "SecurityAuditEventResponse",
+    "IncidentResponse",
+    "IncidentStatusUpdate",
+    "IncidentListResponse",
+    "DetectionRuleResponse",
+    "DetectionSummaryResponse"
 ]

@@ -1,24 +1,17 @@
 # SENTINEL: API Behaviour Monitoring & Suspicious Activity Detection System
-## Phase 1: Foundation and API Event Collection
+## Phases 1 & 2: Foundation, API Event Collection, and Deterministic Security Detection Engine
 
 ---
 
 ## 1. Project Overview
-**SENTINEL** is an enterprise-grade security monitoring platform designed to ingest, validate, normalize, and store API activity events across business systems.
+**SENTINEL** is an enterprise-grade cybersecurity monitoring platform that continuously analyzes API telemetry from three interconnected enterprise systems:
+1. **LedgerOne**: Core financial management and vendor disbursement platform.
+2. **HelpDeskr**: Enterprise customer and vendor ticketing support system.
+3. **TallyBridge**: Integration software synchronizing accounting and financial data with LedgerOne.
 
-In Phase 1, SENTINEL establishes the resilient backend foundation to monitor three core systems:
-1. **LedgerOne**: Finance and vendor payment management system.
-2. **HelpDeskr**: Enterprise customer and vendor support system.
-3. **TallyBridge**: Integration middleware connecting external accounting software to LedgerOne.
+In **Phase 1**, SENTINEL established high-throughput event ingestion, schema enforcement, sensitive data sanitization, cryptographic integrity hashing, and PostgreSQL storage.
 
-### Key Objectives Achieved in Phase 1:
-- **Strict Ingestion**: High-throughput REST API endpoint (`POST /api/v1/events`) validating telemetry schemas using Pydantic v2.
-- **Normalization**: Standardizes timestamps to UTC and enforces RFC-compliant IP address and UUID formats.
-- **Sanitization**: Proactively redacts API tokens, passwords, and full bank account numbers before storage.
-- **Tamper Evidence**: Calculates SHA-256 canonical integrity hashes for each event.
-- **Anti-Replay Protection**: Identifies and rejects duplicate `event_id` submissions with HTTP 409 Conflict, logging them into a dedicated security audit log.
-- **Persistent Storage**: Production PostgreSQL database with Alembic schema migrations and composite indexing.
-- **Event Simulator**: Realistic Python client transmitting legitimate, anomalous, bulk, and fraudulent events.
+In **Phase 2**, SENTINEL adds an inline, modular, deterministic security detection engine that evaluates every incoming API event against configurable security rules, generating explainable security incidents with severity bands, risk scores (0–100), and structured evidence.
 
 ---
 
@@ -27,318 +20,236 @@ In Phase 1, SENTINEL establishes the resilient backend foundation to monitor thr
 ### Clean Layered Architecture
 ```
 sentinel/
-├── .env.example                     # Environment template
-├── .gitignore                       # Git ignore rules
-├── README.md                        # Project documentation
+├── .env.example                               # Environment template
+├── .gitignore                                 # Git ignore rules
+├── README.md                                  # Complete developer onboarding & runbook
+├── setup_portable_postgres.py                 # Automated zero-privilege PostgreSQL 16 runner
+├── setup_db.py                                # Role & database initialization script
 ├── backend/
-│   ├── requirements.txt             # Pinned, tested dependencies
-│   ├── alembic.ini                  # Alembic migration configuration
-│   ├── alembic/                     # Database migrations
-│   │   ├── env.py                   # Dynamic SQLAlchemy configuration
+│   ├── requirements.txt                       # Pinned, tested dependencies
+│   ├── alembic.ini                            # Alembic migration configuration
+│   ├── alembic/                               # Database migrations
+│   │   ├── env.py                             # Dynamic SQLAlchemy configuration
 │   │   └── versions/
-│   │       └── 20261120_0001_initial_schema.py # Initial migration
+│   │       ├── 20261120_0001_initial_schema.py      # Phase 1: api_events, services, audit
+│   │       └── 20261120_0002_add_incidents_and_rules.py # Phase 2: incidents, detection_rules
 │   ├── app/
-│   │   ├── main.py                  # FastAPI entry point & exception handlers
-│   │   ├── config.py                # Pydantic Settings & security bindings
-│   │   ├── database.py              # SQLAlchemy engine & session management
-│   │   ├── models/                  # Database models
-│   │   │   ├── base.py              # Declarative base
-│   │   │   ├── api_event.py         # Ingested API telemetry
-│   │   │   ├── service_identity.py  # Service registry
-│   │   │   └── security_audit.py    # Internal security audit logs
-│   │   ├── schemas/                 # Pydantic v2 schemas
-│   │   │   ├── event.py             # Event validation & responses
-│   │   │   ├── service.py           # Service registry schemas
-│   │   │   └── audit.py             # Security audit schemas
-│   │   ├── routes/                  # API endpoints
-│   │   │   ├── health.py            # /health probe
-│   │   │   └── events.py            # /api/v1/events endpoints
-│   │   ├── services/                # Business logic
-│   │   │   ├── event_service.py     # Ingestion, deduplication, & queries
-│   │   │   ├── audit_service.py     # Safe audit log recorder
-│   │   │   ├── sanitizer.py         # Secret & bank account redaction
-│   │   │   └── seed_data.py         # Baseline service identities
-│   │   └── middleware/              # Defensive middlewares
-│   │       ├── request_size_limit.py# DoS mitigation (1 MB limit)
-│   │       └── security_headers.py  # CSP, HSTS, nosniff, DENY
+│   │   ├── main.py                            # FastAPI entry point, lifespan, & exception handlers
+│   │   ├── config.py                          # Pydantic Settings & network binding rules
+│   │   ├── database.py                        # SQLAlchemy engine, session pool, & health probe
+│   │   ├── models/                            # Database models
+│   │   │   ├── base.py                        # Declarative base
+│   │   │   ├── api_event.py                   # Ingested API telemetry
+│   │   │   ├── service_identity.py            # Service registry
+│   │   │   ├── security_audit.py              # Internal security audit logs
+│   │   │   ├── incident.py                    # Security incidents model
+│   │   │   └── detection_rule.py              # Detection rule model
+│   │   ├── schemas/                           # Pydantic v2 schemas
+│   │   │   ├── event.py                       # Event validation & responses
+│   │   │   ├── service.py                     # Service registry schemas
+│   │   │   ├── audit.py                       # Security audit schemas
+│   │   │   └── incident.py                    # Incident and summary schemas
+│   │   ├── routes/                            # API endpoints
+│   │   │   ├── health.py                      # GET /health probe
+│   │   │   ├── events.py                      # /api/v1/events endpoints
+│   │   │   └── incidents.py                   # /api/v1/incidents & /api/v1/detection endpoints
+│   │   ├── services/                          # Business logic
+│   │   │   ├── event_service.py               # Ingestion, deduplication, & detection trigger
+│   │   │   ├── incident_service.py            # Incident creation, deduplication, triage
+│   │   │   ├── risk_service.py                # Explainable 0-100 risk scoring
+│   │   │   ├── audit_service.py               # Safe audit log recorder
+│   │   │   ├── sanitizer.py                   # Secret & bank account redaction
+│   │   │   └── seed_data.py                   # Baseline service identities
+│   │   ├── detection/                         # Deterministic Detection Engine
+│   │   │   ├── config.py                      # Central configurable thresholds & service scopes
+│   │   │   ├── base_rule.py                   # Abstract BaseDetectionRule & DetectionResult
+│   │   │   ├── engine.py                      # Orchestrator & fault-tolerant execution
+│   │   │   ├── rule_registry.py               # Rule discovery and registry
+│   │   │   └── rules/                         # Individual Detection Rules
+│   │   │       ├── request_rate_rule.py       # Rule 1: Excessive Request Rate
+│   │   │       ├── bulk_access_rule.py        # Rule 2: Bulk Vendor Data Access
+│   │   │       ├── ip_anomaly_rule.py         # Rule 3: Unexpected Source IP
+│   │   │       ├── privilege_violation_rule.py# Rule 4: Privilege & Scope Violation
+│   │   │       ├── bank_change_rule.py        # Rule 5: Sensitive Bank Account Change
+│   │   │       └── missing_approval_rule.py   # Rule 6: Missing Approval Reference
+│   │   └── middleware/                        # Defensive middlewares
+│   │       ├── request_size_limit.py          # DoS mitigation (1 MB limit)
+│   │       └── security_headers.py            # CSP, HSTS, nosniff, DENY
 │   ├── simulator/
-│   │   └── event_simulator.py       # Multi-scenario event generator
-│   └── tests/                       # Automated Pytest suite
-│       ├── conftest.py              # Test harness & fixtures
-│       ├── test_events.py           # Ingestion & retrieval tests
-│       ├── test_duplicate_handling.py # Anti-replay tests
-│       ├── test_validation.py       # Schema validation tests
-│       ├── test_sanitizer.py        # Sensitive data redaction tests
-│       ├── test_health.py           # System readiness tests
-│       └── test_middleware.py       # Security headers & size limits
+│   │   └── event_simulator.py                 # Multi-scenario event generator
+│   └── tests/                                 # Automated Pytest suite (39 tests)
+│       ├── conftest.py                        # Test harness & fixtures
+│       ├── test_events.py                     # Ingestion & retrieval tests
+│       ├── test_duplicate_handling.py         # Anti-replay tests
+│       ├── test_validation.py                 # Schema validation tests
+│       ├── test_sanitizer.py                  # Sensitive data redaction tests
+│       ├── test_health.py                     # System readiness tests
+│       ├── test_middleware.py                 # Security headers & size limits
+│       ├── test_detection_rules.py            # Comprehensive tests for all 6 rules
+│       ├── test_risk_scoring.py               # Risk scoring & severity bands tests
+│       └── test_incidents_api.py              # Incidents API, triage, & deduplication tests
 └── docs/
-    ├── architecture.md              # Technical architecture specification
-    ├── data_dictionary.md           # Database tables and column definitions
-    ├── security_architecture.md     # Threat model and defensive controls
-    └── postgresql_setup_windows.md  # Windows 11 database installation guide
+    ├── architecture.md                        # Technical architecture specification
+    ├── detection_engine.md                    # Detailed detection engine & rules guide
+    ├── risk_scoring.md                        # Explainable risk scoring documentation
+    ├── data_dictionary.md                     # Database tables and column definitions
+    ├── security_architecture.md               # Threat model and defensive controls
+    └── postgresql_setup_windows.md            # Windows 11 database installation guide
 ```
-
-### Key Design Decisions:
-1. **Pydantic v2 with `extra="forbid"`**: Strictly forbids undeclared attributes to prevent parameter injection and mass assignment vulnerabilities.
-2. **Deterministic SHA-256 Ingestion Hash**: Guarantees non-repudiation and verification of historical logs.
-3. **Dedicated `security_audit_events` Table**: Ingestion failures, duplicate attempts, and sanitized payloads generate independent security audits for SOC visibility.
-4. **Localhost Binding Enforcement**: In development, `config.py` verifies that network bindings are restricted to `127.0.0.1` to prevent unintentional exposure on local subnets.
 
 ---
 
-## 3. Windows 11 Installation & Setup
+## 3. The Six Security Detection Rules
 
-### Prerequisites:
-- Windows 11 (64-bit)
-- Python 3.10+ installed
-- PowerShell 5.1 or PowerShell 7
+| Rule ID | Rule Name | Severity | Base Score | Core Detection Criteria |
+| :--- | :--- | :---: | :---: | :--- |
+| `SEC-RULE-RATE-001` | **Excessive API Request Rate** | `MEDIUM` | 45 | Flags requests exceeding threshold (default: 20 reqs / 60s) for a single service identity. |
+| `SEC-RULE-BULK-001` | **Bulk Vendor Data Access** | `MEDIUM` | 50 | Flags single downloads >= 5 MB or repeated cumulative vendor record queries (>= 10 records / >= 15 MB in 300s). |
+| `SEC-RULE-IP-001` | **Unexpected Source IP** | `HIGH` | 65 | Flags activity from outside a service's sanctioned network perimeter. Unconfigured services are treated as untrusted. |
+| `SEC-RULE-PRIV-001` | **Privilege & Scope Violation** | `HIGH` | 75 | Flags read-only services attempting mutations, out-of-scope endpoint requests, or unauthorized bank alterations. |
+| `SEC-RULE-BANK-001` | **Sensitive Bank Account Modification** | `CRITICAL` | 80 | Flags all state-changing modifications to vendor bank accounts. Elevates if unapproved or from unexpected IP. Full bank accounts are masked. |
+| `SEC-RULE-APPR-001` | **Missing Approval Reference** | `HIGH` | 60 | Flags sensitive actions (`MODIFY_VENDOR_BANK_ACCOUNT`, `UPDATE_VENDOR_PROFILE`, `BULK_DATA_EXPORT`) lacking a valid ticket matching `^APP-\d{4}-\d{4,}$`. |
 
-### Step 1: Open PowerShell
-Open Windows PowerShell in the project directory:
-```powershell
-cd "e:\project crimathon\drive-download-20261119T081747Z-1-001\pipeline buid"
+---
+
+## 4. Transparent Risk Scoring Framework
+
+All incidents receive an explainable integer score between `0` and `100`:
+- **80 – 100: CRITICAL** (Sensitive bank modifications, privilege escalation, unauthorized overrides)
+- **60 – 79: HIGH** (Unexpected external IPs, out-of-scope endpoint access, missing approvals)
+- **30 – 59: MEDIUM** (High request rates, bulk data extractions)
+- **0 – 29: LOW** (Informational baseline deviations)
+
+Every incident evidence dictionary records an audit breakdown (`base_score`, `modifiers`, `final_score`, `severity`).
+
+---
+
+## 5. Event Pipeline Processing Sequence
+
+```
+1. Receive Event   -> HTTP POST /api/v1/events (JSON)
+2. Validate Event  -> Pydantic schema validation, UUID check, UTC normalization
+3. Sanitize Event  -> Credential & bank account masking (sanitizer.py)
+4. Persist Event   -> Committed to PostgreSQL (api_events)
+5. Run Detection   -> DetectionEngine evaluates active rules against persisted event
+6. Incident Action -> If triggered, incident is created or correlated into an existing incident
+7. Return Response -> Returns HTTP 201 Created with { status: "accepted", event_id, received_at }
 ```
 
-### Step 2: Install Python Dependencies
+**Fault Isolation**: If any detection rule raises an unexpected exception, it is caught, logged to `security_audit_events` with severity `HIGH`, and the persisted event is **never lost or rolled back**.
+
+---
+
+## 6. Windows 11 PowerShell Setup & Execution
+
+### Step 1: Install Dependencies
 ```powershell
 pip install -r sentinel\backend\requirements.txt
 ```
 
----
-
-## 4. PostgreSQL Setup
-
-### Option 1: Automated Portable PostgreSQL (Zero Admin Rights Needed)
-SENTINEL includes an automated runner that sets up a local PostgreSQL 16 server in user space:
+### Step 2: Ensure PostgreSQL is Running & Run Migrations
 ```powershell
+# Automated portable PostgreSQL runner (if not already running)
 python sentinel\setup_portable_postgres.py
-```
-This automatically initializes the database, creates the user `sentinel_user` with password `sentinel_secure_pass`, and creates the database `sentinel_db`.
 
-### Option 2: Pre-existing PostgreSQL Service
-If you already have PostgreSQL running:
-1. Connect via `psql`:
-```powershell
-psql -U postgres -h 127.0.0.1 -p 5432
-```
-2. Execute setup commands:
-```sql
-CREATE ROLE sentinel_user WITH LOGIN PASSWORD 'sentinel_secure_pass';
-CREATE DATABASE sentinel_db OWNER sentinel_user;
-GRANT ALL PRIVILEGES ON DATABASE sentinel_db TO sentinel_user;
-```
-
----
-
-## 5. Environment Configuration
-
-Copy the `.env.example` file to create your local `.env`:
-```powershell
-Copy-Item sentinel\.env.example sentinel\backend\.env
-```
-
-Default `.env` configuration:
-```ini
-ENVIRONMENT=development
-HOST=127.0.0.1
-PORT=8000
-DATABASE_URL=postgresql+psycopg://sentinel_user:sentinel_secure_pass@127.0.0.1:5432/sentinel_db
-DB_POOL_SIZE=10
-DB_MAX_OVERFLOW=20
-DB_POOL_TIMEOUT=30
-MAX_REQUEST_SIZE_BYTES=1048576
-LOG_LEVEL=INFO
-ALLOWED_SOURCE_SYSTEMS=["LedgerOne","HelpDeskr","TallyBridge"]
-```
-
----
-
-## 6. Database Migrations
-
-Apply Alembic migrations to set up tables and indexes:
-```powershell
+# Apply Alembic database migrations
 cd sentinel\backend
 alembic upgrade head
 cd ..\..
-```
 
-Seed initial service identities (LedgerOne, HelpDeskr, TallyBridge):
-```powershell
+# Seed baseline service identities
 python -m sentinel.backend.app.services.seed_data
 ```
 
----
-
-## 7. How to Run the Backend
-
-Launch the FastAPI application with Uvicorn:
+### Step 3: Run the FastAPI Backend Server
 ```powershell
-python -m uvicorn sentinel.backend.app.main:app --host 127.0.0.1 --port 8000 --reload
+python -m uvicorn sentinel.backend.app.main:app --host 127.0.0.1 --port 8000
 ```
-
-- **Health Check**: `http://127.0.0.1:8000/health`
-- **Interactive Swagger Documentation**: `http://127.0.0.1:8000/docs`
-- **ReDoc Documentation**: `http://127.0.0.1:8000/redoc`
+* **Swagger API Docs**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+* **Health Probe**: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health)
+* **Incidents Endpoint**: [http://127.0.0.1:8000/api/v1/incidents](http://127.0.0.1:8000/api/v1/incidents)
+* **Detection Summary**: [http://127.0.0.1:8000/api/v1/detection/summary](http://127.0.0.1:8000/api/v1/detection/summary)
 
 ---
 
-## 8. How to Run the Test Suite
+## 7. How to Run the Automated Test Suite
 
-Execute the automated Pytest suite (21 unit and integration tests):
+Execute the complete test suite (39 passing unit and integration tests):
 ```powershell
 cd sentinel\backend
 pytest -v
 cd ..\..
 ```
 
-### Test Coverage Highlights:
-- **Valid event submission**: Tests ingestion, normalization, and HTTP 201 response.
-- **Duplicate handling**: Verifies HTTP 409 Conflict, non-silent rejection, and audit log creation.
-- **Input validation**: Verifies HTTP 422 for missing required fields, bad UUIDs, invalid HTTP verbs, bad IP addresses, and negative byte sizes.
-- **Data sanitization**: Verifies redaction of passwords, tokens, and masking of bank account numbers.
-- **Pagination & filtering**: Verifies query filtering by system, service identity, HTTP status code, action, and timestamps.
-- **Middleware**: Verifies HTTP 413 request size limits and defensive security headers.
-
 ---
 
-## 9. How to Run the Event Simulator
+## 8. How to Run the Event Simulator
 
-The test simulator transmits realistic HTTP requests to the live running backend.
-
-### Run All Scenarios (Default: 30 events with duplicate & malformed edge tests):
+Send simulated HTTP requests to the running backend to demonstrate detection and incident generation:
 ```powershell
+# Send 30 mixed events with duplicate & malformed edge tests:
 python sentinel\backend\simulator\event_simulator.py --count 30 --test-duplicates --test-invalid
-```
 
-### Specific Simulation Scenarios:
-- **Normal vendor reads**:
-  ```powershell
-  python sentinel\backend\simulator\event_simulator.py --scenario vendor_reads --count 15
-  ```
-- **Normal payment checks**:
-  ```powershell
-  python sentinel\backend\simulator\event_simulator.py --scenario payment_checks --count 15
-  ```
-- **Vendor profile updates**:
-  ```powershell
-  python sentinel\backend\simulator\event_simulator.py --scenario profile_updates --count 10
-  ```
-- **Unusual bulk data requests (Large payloads)**:
-  ```powershell
-  python sentinel\backend\simulator\event_simulator.py --scenario bulk_requests --count 5
-  ```
-- **Vendor bank account modification attempts**:
-  ```powershell
-  python sentinel\backend\simulator\event_simulator.py --scenario bank_modifications --count 5
-  ```
+# Target specific scenarios:
+python sentinel\backend\simulator\event_simulator.py --scenario bank_modifications --count 5
+python sentinel\backend\simulator\event_simulator.py --scenario bulk_requests --count 5
+python sentinel\backend\simulator\event_simulator.py --scenario profile_updates --count 5
+```
 
 ---
 
-## 10. API Specification & Example Requests
+## 9. API Specification & Example Requests
 
-### A. Health Probe
-**Request**:
+### A. Query Security Incidents with Filters & Pagination
 ```bash
-curl -X GET "http://127.0.0.1:8000/health"
+curl -X GET "http://127.0.0.1:8000/api/v1/incidents?severity=CRITICAL&status=OPEN&limit=5"
 ```
 **Response (HTTP 200 OK)**:
 ```json
 {
-  "status": "healthy",
-  "service": "SENTINEL API Activity Monitor",
-  "version": "1.0.0",
-  "environment": "development",
-  "database": {
-    "status": "connected",
-    "latency_ms": 1.75
-  },
-  "timestamp": "2026-11-20T02:39:41.936081Z"
-}
-```
-
----
-
-### B. Ingest API Event
-**Request**:
-```bash
-curl -X POST "http://127.0.0.1:8000/api/v1/events" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "event_id": "7ee58955-fb69-49fb-8922-6fed56397dae",
-    "timestamp": "2026-11-20T02:00:00Z",
-    "source_system": "LedgerOne",
-    "service_identity": "srv-ledgerone-core",
-    "endpoint": "/api/v1/vendors/vnd_10482",
-    "http_method": "GET",
-    "http_status_code": 200,
-    "request_size_bytes": 185,
-    "response_size_bytes": 1580,
-    "source_ip": "10.0.1.45",
-    "auth_identity": "usr_fin_882",
-    "action": "READ_VENDOR_RECORD",
-    "resource_type": "VENDOR",
-    "resource_id": "vnd_10482",
-    "approval_reference": null
-  }'
-```
-**Response (HTTP 201 Created)**:
-```json
-{
-  "status": "accepted",
-  "event_id": "7ee58955-fb69-49fb-8922-6fed56397dae",
-  "received_at": "2026-11-20T02:39:42.100523Z"
-}
-```
-
----
-
-### C. Duplicate Event Rejection
-**Submitting the same `event_id` again:**
-**Response (HTTP 409 Conflict)**:
-```json
-{
-  "detail": {
-    "error": "DuplicateEventError",
-    "message": "An event with event_id '7ee58955-fb69-49fb-8922-6fed56397dae' has already been processed.",
-    "event_id": "7ee58955-fb69-49fb-8922-6fed56397dae"
-  }
-}
-```
-
----
-
-### D. Query Events with Filtering & Pagination
-**Request**:
-```bash
-curl -X GET "http://127.0.0.1:8000/api/v1/events?source_system=LedgerOne&http_status_code=200&page=1&limit=2"
-```
-**Response (HTTP 200 OK)**:
-```json
-{
-  "total": 24,
+  "total": 1,
   "page": 1,
-  "limit": 2,
-  "pages": 12,
+  "limit": 5,
+  "pages": 1,
   "items": [
     {
-      "event_id": "cb546a3c-5985-49f8-873d-55885824a213",
-      "timestamp": "2026-11-19T21:09:44.601769Z",
-      "source_system": "LedgerOne",
+      "id": 1,
+      "incident_id": "13e99847-015a-4ffe-86fe-14b757827157",
+      "rule_id": "SEC-RULE-BANK-001",
+      "rule_name": "Sensitive Bank Account Modification",
+      "severity": "CRITICAL",
+      "risk_score": 95,
+      "status": "OPEN",
       "service_identity": "srv-ledgerone-core",
-      "endpoint": "/api/v1/vendors/vnd_19283",
-      "http_method": "GET",
-      "http_status_code": 200,
-      "request_size_bytes": 185,
-      "response_size_bytes": 1580,
-      "source_ip": "10.0.1.45",
-      "auth_identity": "usr_sup_401",
-      "action": "READ_VENDOR_RECORD",
-      "resource_type": "VENDOR",
-      "resource_id": "vnd_19283",
-      "approval_reference": null,
-      "id": 30,
-      "received_at": "2026-11-20T02:39:44.612837Z",
-      "payload_hash": "976c0bbc2d1daf622c99ef9c02809152ff3d8cb490ce99a24cb7008adf16844a"
+      "related_event_ids": [
+        "79f5c3dd-2d88-4bda-89ce-5db7fdb38a4a"
+      ],
+      "resource_type": "BANK_ACCOUNT",
+      "resource_id": "ACC-***masked***0719",
+      "explanation": "Sensitive vendor bank account modification attempted by service 'srv-ledgerone-core' for resource 'ACC-***masked***0719'. Approval Status: UNAPPROVED / INVALID.",
+      "evidence": {
+        "service_identity": "srv-ledgerone-core",
+        "action": "MODIFY_VENDOR_BANK_ACCOUNT",
+        "endpoint": "/api/v1/vendors/vnd_20491/bank-account",
+        "resource_id": "ACC-***masked***0719",
+        "source_ip": "10.0.1.45",
+        "is_approval_valid": false,
+        "occurrence_count": 1,
+        "scoring_breakdown": {
+          "base_score": 80,
+          "modifiers": [
+            {
+              "factor": "unverified_or_missing_approval",
+              "points": 15,
+              "reason": "Bank modification attempted with invalid/missing approval"
+            }
+          ],
+          "final_score": 95,
+          "severity": "CRITICAL"
+        }
+      },
+      "created_at": "2026-11-20T02:54:27.260350Z",
+      "updated_at": "2026-11-20T02:54:27.260350Z"
     }
   ]
 }
@@ -346,45 +257,37 @@ curl -X GET "http://127.0.0.1:8000/api/v1/events?source_system=LedgerOne&http_st
 
 ---
 
-### E. Single Event Retrieval
-**Request**:
+### B. Update Incident Triage Status
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/incidents/13e99847-015a-4ffe-86fe-14b757827157/status" `
+  -Method Patch -ContentType "application/json" `
+  -Body '{"status":"INVESTIGATING","notes":"SOC analyst triaging unapproved override"}'
+```
+
+**Lifecycle Transition Rules**:
+- `OPEN` -> `INVESTIGATING`, `RESOLVED`, `FALSE_POSITIVE`
+- `INVESTIGATING` -> `RESOLVED`, `FALSE_POSITIVE`, `OPEN`
+- `RESOLVED` -> `OPEN` (re-open)
+- `FALSE_POSITIVE` -> `OPEN` (re-open)
+
+---
+
+### C. Inspect Registered Detection Rules
 ```bash
-curl -X GET "http://127.0.0.1:8000/api/v1/events/cb546a3c-5985-49f8-873d-55885824a213"
-```
-**Response (HTTP 200 OK)**:
-```json
-{
-  "event_id": "cb546a3c-5985-49f8-873d-55885824a213",
-  "timestamp": "2026-11-19T21:09:44.601769Z",
-  "source_system": "LedgerOne",
-  "service_identity": "srv-ledgerone-core",
-  "endpoint": "/api/v1/vendors/vnd_19283",
-  "http_method": "GET",
-  "http_status_code": 200,
-  "request_size_bytes": 185,
-  "response_size_bytes": 1580,
-  "source_ip": "10.0.1.45",
-  "auth_identity": "usr_sup_401",
-  "action": "READ_VENDOR_RECORD",
-  "resource_type": "VENDOR",
-  "resource_id": "vnd_19283",
-  "approval_reference": null,
-  "id": 30,
-  "received_at": "2026-11-20T02:39:44.612837Z",
-  "payload_hash": "976c0bbc2d1daf622c99ef9c02809152ff3d8cb490ce99a24cb7008adf16844a"
-}
+curl -X GET "http://127.0.0.1:8000/api/v1/detection/rules"
 ```
 
 ---
 
-## 11. Known Limitations (Phase 1)
-1. **Synchronous Ingestion Model**: In Phase 1, events are written synchronously to PostgreSQL. For multi-thousand events/sec ingestion in future phases, an asynchronous message queue (e.g. Kafka/Redis) or asynchronous worker pool can be integrated.
-2. **Rule-Based Sanitization**: Sanitizer employs deterministic regex and Luhn checks; contextual natural language entity recognition will be added in Phase 2.
-3. **Localhost Single Node**: Phase 1 is optimized for a single-node Windows 11 development workstation (16 GB RAM). Clustered PostgreSQL and multi-region deployment are planned for future AWS deployment.
+### D. Detection Summary
+```bash
+curl -X GET "http://127.0.0.1:8000/api/v1/detection/summary"
+```
 
 ---
 
-## 12. Recommended Phase 2 Roadmap
-- **Phase 2A: Statistical Baseline & Anomaly Rules Engine**: Rule-based detection flags for unusual bulk data requests, off-hours administrative access, and velocity violations without full ML.
-- **Phase 2B: API Authentication & Service Identity Mutual TLS**: Client token verification (JWT) and role-based access control (RBAC).
-- **Phase 2C: High-Velocity Batch Ingestion Endpoint**: `POST /api/v1/events/batch` accepting batches of events in a single transactional write.
+## 10. Security Considerations & Limitations
+
+1. **Service Identity Authentication Limitation**: In this development phase, service identities are read from incoming event telemetry and matched against the configuration policy. There is **no cryptographic mTLS or OAuth2/JWT token verification** yet. Do not assume claimed identities are independently attested until Phase 3 adds client certificate / token validation.
+2. **Localhost Single-Node Constraint**: Phase 2 runs in a local environment (Windows 11, 16 GB RAM). Production clustering, distributed locks, and cloud RDS will follow in deployment phases.
+3. **Detection vs Enforcement**: The engine operates as an observer/monitor; it does not block operations on the monitored systems themselves.

@@ -6,6 +6,7 @@ integrity hashing, and database persistence.
 
 import hashlib
 import json
+import logging
 from datetime import datetime, timezone
 from typing import Optional, Tuple, List
 from sqlalchemy import select, func, and_
@@ -16,6 +17,9 @@ from sentinel.backend.app.models.service_identity import ServiceIdentity
 from sentinel.backend.app.schemas.event import EventCreate
 from sentinel.backend.app.services.sanitizer import sanitize_text
 from sentinel.backend.app.services.audit_service import record_security_audit
+from sentinel.backend.app.detection.engine import detection_engine
+
+logger = logging.getLogger("sentinel.event_service")
 
 
 class DuplicateEventException(Exception):
@@ -152,7 +156,6 @@ def process_and_store_event(db: Session, event_in: EventCreate, client_ip: str) 
         db.add(db_event)
         db.commit()
         db.refresh(db_event)
-        return db_event
     except Exception as exc:
         db.rollback()
         record_security_audit(
@@ -165,6 +168,18 @@ def process_and_store_event(db: Session, event_in: EventCreate, client_ip: str) 
             event_id_referenced=event_in.event_id
         )
         raise
+
+    # 7. Run Deterministic Detection Engine against persisted event
+    # Detection failures are handled gracefully so persisted telemetry is never lost
+    try:
+        detection_engine.analyze_event(db_event, db)
+    except Exception as detect_exc:
+        logger.error(
+            "Detection engine encounter failure analyzing event %s: %s",
+            db_event.event_id, str(detect_exc), exc_info=True
+        )
+
+    return db_event
 
 
 def get_event_by_id(db: Session, event_id: str) -> Optional[ApiEvent]:

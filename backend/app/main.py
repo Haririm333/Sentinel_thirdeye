@@ -16,6 +16,7 @@ from sentinel.backend.app.middleware.request_size_limit import RequestSizeLimitM
 from sentinel.backend.app.middleware.security_headers import SecurityHeadersMiddleware
 from sentinel.backend.app.routes.health import router as health_router
 from sentinel.backend.app.routes.events import router as events_router
+from sentinel.backend.app.routes.incidents import router as incidents_router
 
 settings = get_settings()
 
@@ -116,6 +117,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 # 4. Include Routers
 app.include_router(health_router)
 app.include_router(events_router)
+app.include_router(incidents_router)
 
 
 if __name__ == "__main__":

@@ -6,5 +6,14 @@ from sentinel.backend.app.models.base import Base
 from sentinel.backend.app.models.api_event import ApiEvent
 from sentinel.backend.app.models.service_identity import ServiceIdentity
 from sentinel.backend.app.models.security_audit import SecurityAuditEvent
+from sentinel.backend.app.models.incident import Incident
+from sentinel.backend.app.models.detection_rule import DetectionRuleModel
 
-__all__ = ["Base", "ApiEvent", "ServiceIdentity", "SecurityAuditEvent"]
+__all__ = [
+    "Base",
+    "ApiEvent",
+    "ServiceIdentity",
+    "SecurityAuditEvent",
+    "Incident",
+    "DetectionRuleModel"
+]
