@@ -136,6 +136,13 @@ export const getBankChangeById = async (requestId: string): Promise<BankChangeRe
 
 export const getBankChangeAudit = async (requestId: string): Promise<{ request_id: string; total_records: number; audit_trail: AuditRecord[] }> => {
   const res = await apiClient.get(`/api/v1/bank-changes/${requestId}/audit`);
+  if (Array.isArray(res.data)) {
+    return {
+      request_id: requestId,
+      total_records: res.data.length,
+      audit_trail: res.data
+    };
+  }
   return res.data;
 };
 
@@ -151,12 +158,19 @@ export const createBankChangeRequest = async (payload: {
   proposed_routing_number: string;
   request_reason: string;
 }): Promise<BankChangeRequest> => {
-  const res = await apiClient.post('/api/v1/bank-changes', payload);
+  const body = {
+    ...payload,
+    proposed_account_number: payload.proposed_bank_account
+  };
+  const res = await apiClient.post('/api/v1/bank-changes', body);
   return res.data;
 };
 
 export const approveBankChange = async (requestId: string, notes?: string): Promise<BankChangeRequest> => {
-  const res = await apiClient.post(`/api/v1/bank-changes/${requestId}/approve`, { notes: notes || '' });
+  const res = await apiClient.post(`/api/v1/bank-changes/${requestId}/approve`, {
+    comment: notes || '',
+    notes: notes || ''
+  });
   return res.data;
 };
 
@@ -165,7 +179,9 @@ export const rejectBankChange = async (requestId: string, reason: string): Promi
   return res.data;
 };
 
-export const cancelBankChange = async (requestId: string): Promise<BankChangeRequest> => {
-  const res = await apiClient.post(`/api/v1/bank-changes/${requestId}/cancel`);
+export const cancelBankChange = async (requestId: string, reason?: string): Promise<BankChangeRequest> => {
+  const res = await apiClient.post(`/api/v1/bank-changes/${requestId}/cancel`, {
+    reason: reason || 'Cancelled by user'
+  });
   return res.data;
 };

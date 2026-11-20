@@ -2,7 +2,7 @@
   "model_id": "lstm_srv-ledgerone-paygate_v1.0.0",
   "model_version": "1.0.0",
   "service_identity": "srv-ledgerone-paygate",
-  "created_at": "2026-11-19T23:12:34.833456+00:00",
+  "created_at": "2026-11-20T04:34:14.433395+00:00",
   "feature_schema_version": "1.0.0",
   "feature_names": [
     "request_size_bytes",
@@ -22,7 +22,7 @@
     "endpoint_ordinal"
   ],
   "feature_count": 15,
-  "calibrated_threshold": 0.3726430833339691,
+  "calibrated_threshold": 0.3691302239894867,
   "training_sequence_count": 91,
   "config": {
     "input_dim": 15,
@@ -41,52 +41,52 @@
   },
   "feature_error_baselines": {
     "request_size_bytes": {
-      "mean_error": 1.095,
-      "std_error": 0.448
+      "mean_error": 1.0839,
+      "std_error": 0.4436
     },
     "response_size_bytes": {
-      "mean_error": 0.7565,
-      "std_error": 0.3126
+      "mean_error": 0.7623,
+      "std_error": 0.3149
     },
     "total_bytes": {
-      "mean_error": 0.757,
-      "std_error": 0.3128
+      "mean_error": 0.7574,
+      "std_error": 0.313
     },
     "is_write": {
-      "mean_error": 0.0001,
-      "std_error": 0.0101
-    },
-    "is_read": {
-      "mean_error": 0.0001,
-      "std_error": 0.01
-    },
-    "is_failed": {
-      "mean_error": 0.0001,
-      "std_error": 0.01
-    },
-    "is_unusual_method": {
-      "mean_error": 0.0001,
-      "std_error": 0.01
-    },
-    "time_of_day_deviation": {
       "mean_error": 0.0002,
       "std_error": 0.0101
     },
+    "is_read": {
+      "mean_error": 0.0002,
+      "std_error": 0.0101
+    },
+    "is_failed": {
+      "mean_error": 0.0005,
+      "std_error": 0.0102
+    },
+    "is_unusual_method": {
+      "mean_error": 0.0003,
+      "std_error": 0.0101
+    },
+    "time_of_day_deviation": {
+      "mean_error": 0.0001,
+      "std_error": 0.01
+    },
     "time_delta_seconds": {
-      "mean_error": 0.7892,
-      "std_error": 0.3257
+      "mean_error": 0.7972,
+      "std_error": 0.3289
     },
     "is_vendor_access": {
       "mean_error": 0.0001,
       "std_error": 0.0101
     },
     "is_new_endpoint": {
-      "mean_error": 0.0003,
+      "mean_error": 0.0004,
       "std_error": 0.0101
     },
     "source_ip_novelty": {
-      "mean_error": 0.0002,
-      "std_error": 0.0101
+      "mean_error": 0.0001,
+      "std_error": 0.01
     },
     "is_sensitive_resource": {
       "mean_error": 0.0003,
@@ -97,8 +97,8 @@
       "std_error": 0.01
     },
     "endpoint_ordinal": {
-      "mean_error": 1.1343,
-      "std_error": 0.4637
+      "mean_error": 0.9971,
+      "std_error": 0.4088
     }
   },
   "model_status": "READY"

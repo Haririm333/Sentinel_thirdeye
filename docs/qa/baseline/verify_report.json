@@ -1,0 +1,202 @@
+{
+  "timestamp": "2026-11-20T03:45:23.969960+00:00",
+  "total_checks": 7,
+  "passed": 7,
+  "failed": 0,
+  "warnings": 0,
+  "checks": [
+    {
+      "name": "System Health Probe",
+      "status": "PASS",
+      "duration_sec": 0.034,
+      "details": {
+        "status": "healthy",
+        "service": "SENTINEL API Activity Monitor",
+        "version": "1.0.0",
+        "environment": "development",
+        "database": {
+          "status": "connected",
+          "latency_ms": 3.08
+        },
+        "timestamp": "2026-11-20T03:44:08.856050+00:00"
+      }
+    },
+    {
+      "name": "Security Detection Rules",
+      "status": "PASS",
+      "duration_sec": 0.013,
+      "details": {
+        "rules_count": 6
+      }
+    },
+    {
+      "name": "Isolation Forest Anomaly Detector",
+      "status": "PASS",
+      "duration_sec": 2.585,
+      "details": {
+        "status": "operational",
+        "feature_schema_version": "1.0.0",
+        "service_baselines": {
+          "srv-ledgerone-core": {
+            "status": "READY",
+            "model_id": "isoforest_srv-ledgerone-core_v1.0.0",
+            "calibrated_threshold": -0.5585627288754226,
+            "trained_at": "2026-11-20T03:44:09.367881+00:00"
+          },
+          "srv-ledgerone-paygate": {
+            "status": "READY",
+            "model_id": "isoforest_srv-ledgerone-paygate_v1.0.0",
+            "calibrated_threshold": -0.5521062556283401,
+            "trained_at": "2026-11-20T03:44:09.919832+00:00"
+          },
+          "srv-helpdeskr-agent": {
+            "status": "READY",
+            "model_id": "isoforest_srv-helpdeskr-agent_v1.0.0",
+            "calibrated_threshold": -0.5801159300676577,
+            "trained_at": "2026-11-20T03:44:10.592766+00:00"
+          },
+          "srv-tallybridge-sync": {
+            "status": "READY",
+            "model_id": "isoforest_srv-tallybridge-sync_v1.0.0",
+            "calibrated_threshold": -0.5578190909265553,
+            "trained_at": "2026-11-20T03:44:11.417592+00:00"
+          }
+        }
+      }
+    },
+    {
+      "name": "PyTorch LSTM Sequential Autoencoder",
+      "status": "PASS",
+      "duration_sec": 16.447,
+      "details": {
+        "status": "operational",
+        "subsystem": "LSTM Autoencoder Sequential Anomaly Detector",
+        "device": "cpu",
+        "feature_schema_version": "1.0.0",
+        "service_baselines": {
+          "srv-ledgerone-core": {
+            "status": "READY",
+            "model_id": "lstm_srv-ledgerone-core_v1.0.0",
+            "calibrated_threshold": 0.4101117253303528,
+            "trained_at": "2026-11-20T03:44:20.823578+00:00"
+          },
+          "srv-ledgerone-paygate": {
+            "status": "READY",
+            "model_id": "lstm_srv-ledgerone-paygate_v1.0.0",
+            "calibrated_threshold": 0.36371558904647827,
+            "trained_at": "2026-11-20T03:44:22.796387+00:00"
+          },
+          "srv-helpdeskr-agent": {
+            "status": "READY",
+            "model_id": "lstm_srv-helpdeskr-agent_v1.0.0",
+            "calibrated_threshold": 0.5443883538246155,
+            "trained_at": "2026-11-20T03:44:26.012886+00:00"
+          },
+          "srv-tallybridge-sync": {
+            "status": "READY",
+            "model_id": "lstm_srv-tallybridge-sync_v1.0.0",
+            "calibrated_threshold": 0.40077771805226803,
+            "trained_at": "2026-11-20T03:44:27.890311+00:00"
+          }
+        }
+      }
+    },
+    {
+      "name": "Bank Change Approval Listing",
+      "status": "PASS",
+      "duration_sec": 0.021,
+      "details": {
+        "total_requests": 2
+      }
+    },
+    {
+      "name": "Unified Multi-Tier Analytics Summary",
+      "status": "PASS",
+      "duration_sec": 0.019,
+      "details": {
+        "total_assessed_events": 81,
+        "total_incidents": 23,
+        "component_trigger_counts": {
+          "DETERMINISTIC_RULES": 19,
+          "ISOLATION_FOREST": 2,
+          "LSTM_AUTOENCODER": 2,
+          "MULTI_TIER_CORRELATED": 0
+        },
+        "severity_distribution": {
+          "LOW": 0,
+          "MEDIUM": 1,
+          "HIGH": 18,
+          "CRITICAL": 4
+        },
+        "average_risk_score": 72.13,
+        "model_status": {
+          "deterministic_engine": {
+            "rules_active": 6,
+            "status": "READY"
+          },
+          "isolation_forest": {
+            "srv-ledgerone-core": {
+              "status": "READY",
+              "model_id": "isoforest_srv-ledgerone-core_v1.0.0",
+              "calibrated_threshold": -0.5585627288754226,
+              "trained_at": "2026-11-20T03:44:09.367881+00:00"
+            },
+            "srv-ledgerone-paygate": {
+              "status": "READY",
+              "model_id": "isoforest_srv-ledgerone-paygate_v1.0.0",
+              "calibrated_threshold": -0.5521062556283401,
+              "trained_at": "2026-11-20T03:44:09.919832+00:00"
+            },
+            "srv-helpdeskr-agent": {
+              "status": "READY",
+              "model_id": "isoforest_srv-helpdeskr-agent_v1.0.0",
+              "calibrated_threshold": -0.5801159300676577,
+              "trained_at": "2026-11-20T03:44:10.592766+00:00"
+            },
+            "srv-tallybridge-sync": {
+              "status": "READY",
+              "model_id": "isoforest_srv-tallybridge-sync_v1.0.0",
+              "calibrated_threshold": -0.5578190909265553,
+              "trained_at": "2026-11-20T03:44:11.417592+00:00"
+            }
+          },
+          "lstm_autoencoder": {
+            "srv-ledgerone-core": {
+              "status": "READY",
+              "model_id": "lstm_srv-ledgerone-core_v1.0.0",
+              "calibrated_threshold": 0.4101117253303528,
+              "trained_at": "2026-11-20T03:44:20.823578+00:00"
+            },
+            "srv-ledgerone-paygate": {
+              "status": "READY",
+              "model_id": "lstm_srv-ledgerone-paygate_v1.0.0",
+              "calibrated_threshold": 0.36371558904647827,
+              "trained_at": "2026-11-20T03:44:22.796387+00:00"
+            },
+            "srv-helpdeskr-agent": {
+              "status": "READY",
+              "model_id": "lstm_srv-helpdeskr-agent_v1.0.0",
+              "calibrated_threshold": 0.5443883538246155,
+              "trained_at": "2026-11-20T03:44:26.012886+00:00"
+            },
+            "srv-tallybridge-sync": {
+              "status": "READY",
+              "model_id": "lstm_srv-tallybridge-sync_v1.0.0",
+              "calibrated_threshold": 0.40077771805226803,
+              "trained_at": "2026-11-20T03:44:27.890311+00:00"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Pytest Test Suite (sentinel/backend)",
+      "status": "PASS",
+      "duration_sec": 56.025,
+      "details": {
+        "return_code": 0,
+        "stdout": "rejected PASSED [ 90%]\nsentinel/backend/tests/test_unified_assessment.py::test_sensitive_data_masking_in_assessments PASSED [ 91%]\nsentinel/backend/tests/test_validation.py::test_missing_required_fields_rejected PASSED [ 92%]\nsentinel/backend/tests/test_validation.py::test_invalid_uuid_rejected PASSED [ 93%]\nsentinel/backend/tests/test_validation.py::test_invalid_http_method_rejected PASSED [ 94%]\nsentinel/backend/tests/test_validation.py::test_invalid_http_status_code_rejected PASSED [ 95%]\nsentinel/backend/tests/test_validation.py::test_invalid_ip_address_rejected PASSED [ 96%]\nsentinel/backend/tests/test_validation.py::test_endpoint_without_leading_slash_rejected PASSED [ 97%]\nsentinel/backend/tests/test_validation.py::test_negative_byte_sizes_rejected PASSED [ 98%]\nsentinel/backend/tests/test_validation.py::test_unknown_extra_fields_rejected PASSED [ 99%]\nsentinel/backend/tests/test_validation.py::test_timestamp_normalization_to_utc PASSED [100%]\n\n============================== warnings summary ===============================\nsentinel/backend/tests/test_incidents_api.py::test_patch_incident_status_transitions\n  C:\\python311\\lib\\site-packages\\_pytest\\python.py:167: StarletteDeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.\n    result = testfunction(**testargs)\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================= 103 passed, 1 warning in 35.78s =======================\n"
+      }
+    }
+  ]
+}

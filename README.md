@@ -26,6 +26,7 @@ sentinel/
 ├── .env.example                               # Environment template
 ├── .gitignore                                 # Git ignore rules
 ├── README.md                                  # Complete developer onboarding & runbook
+├── verify_sentinel.py                         # Automated system verification & health harness
 ├── setup_portable_postgres.py                 # Automated zero-privilege PostgreSQL 16 runner
 ├── setup_db.py                                # Role & database initialization script
 ├── backend/
@@ -34,8 +35,11 @@ sentinel/
 │   ├── alembic/                               # Database migrations
 │   │   ├── env.py                             # Dynamic SQLAlchemy configuration
 │   │   └── versions/
-│   │       ├── 20261120_0001_initial_schema.py      # Phase 1: api_events, services, audit
-│   │       └── 20261120_0002_add_incidents_and_rules.py # Phase 2: incidents, detection_rules
+│   │       ├── 20261120_0001_initial_schema.py             # Phase 1: api_events, services, audit
+│   │       ├── 20261120_0002_add_incidents_and_rules.py    # Phase 2: incidents, detection_rules
+│   │       ├── 20261120_0003_add_bank_approvals.py          # Phase 5: two-person bank approvals
+│   │       ├── 20261120_0004_add_unified_assessment_fields.py # Phase 6: risk snapshots
+│   │       └── 20261120_0005_audit_log_immutability.py     # Phase 2 QA: audit trigger immutability
 │   ├── app/
 │   │   ├── main.py                            # FastAPI entry point, lifespan, & exception handlers
 │   │   ├── config.py                          # Pydantic Settings & network binding rules
@@ -46,23 +50,33 @@ sentinel/
 │   │   │   ├── service_identity.py            # Service registry
 │   │   │   ├── security_audit.py              # Internal security audit logs
 │   │   │   ├── incident.py                    # Security incidents model
-│   │   │   └── detection_rule.py              # Detection rule model
+│   │   │   ├── detection_rule.py              # Detection rule model
+│   │   │   └── bank_approval.py               # Vendor bank accounts, requests, approvals, audit logs
 │   │   ├── schemas/                           # Pydantic v2 schemas
 │   │   │   ├── event.py                       # Event validation & responses
 │   │   │   ├── service.py                     # Service registry schemas
 │   │   │   ├── audit.py                       # Security audit schemas
-│   │   │   └── incident.py                    # Incident and summary schemas
+│   │   │   ├── incident.py                    # Incident and summary schemas
+│   │   │   └── bank_approval.py               # Masked bank change & approval schemas
 │   │   ├── routes/                            # API endpoints
-│   │   │   ├── health.py                      # GET /health probe
+│   │   │   ├── health.py                      # GET /api/v1/health probe
 │   │   │   ├── events.py                      # /api/v1/events endpoints
-│   │   │   └── incidents.py                   # /api/v1/incidents & /api/v1/detection endpoints
+│   │   │   ├── incidents.py                   # /api/v1/incidents & /api/v1/detection endpoints
+│   │   │   ├── bank_approvals.py              # /api/v1/bank-changes endpoints (CRUD, approve, reject, cancel)
+│   │   │   ├── assessment.py                  # /api/v1/assessment & risk-assessment endpoints
+│   │   │   └── ml.py                          # /api/v1/ml & /api/v1/lstm endpoints
 │   │   ├── services/                          # Business logic
 │   │   │   ├── event_service.py               # Ingestion, deduplication, & detection trigger
 │   │   │   ├── incident_service.py            # Incident creation, deduplication, triage
 │   │   │   ├── risk_service.py                # Explainable 0-100 risk scoring
 │   │   │   ├── audit_service.py               # Safe audit log recorder
 │   │   │   ├── sanitizer.py                   # Secret & bank account redaction
-│   │   │   └── seed_data.py                   # Baseline service identities
+│   │   │   ├── seed_data.py                   # Baseline service identities
+│   │   │   ├── bank_approval_service.py       # Two-person bank approval enforcement engine
+│   │   │   └── unified_assessment_service.py  # Multi-tier risk aggregation engine
+│   │   ├── security/                          # Security & Cryptography
+│   │   │   ├── auth.py                        # Development authentication & RBAC adapter
+│   │   │   └── bank_crypto.py                 # Fernet AES encryption & SHA-256 fingerprinting
 │   │   ├── detection/                         # Deterministic Detection Engine
 │   │   │   ├── config.py                      # Central configurable thresholds & service scopes
 │   │   │   ├── base_rule.py                   # Abstract BaseDetectionRule & DetectionResult
@@ -75,12 +89,17 @@ sentinel/
 │   │   │       ├── privilege_violation_rule.py# Rule 4: Privilege & Scope Violation
 │   │   │       ├── bank_change_rule.py        # Rule 5: Sensitive Bank Account Change
 │   │   │       └── missing_approval_rule.py   # Rule 6: Missing Approval Reference
+│   │   ├── ml/                                # Machine Learning Subsystems
+│   │   │   ├── features.py                    # 15-dimensional behavioral feature pipeline
+│   │   │   ├── detector.py                    # Isolation Forest anomaly detector
+│   │   │   ├── lstm_autoencoder.py            # PyTorch sequential LSTM autoencoder model
+│   │   │   └── lstm_pipeline.py               # Chronological sequence builder & normalization
 │   │   └── middleware/                        # Defensive middlewares
 │   │       ├── request_size_limit.py          # DoS mitigation (1 MB limit)
 │   │       └── security_headers.py            # CSP, HSTS, nosniff, DENY
 │   ├── simulator/
 │   │   └── event_simulator.py                 # Multi-scenario event generator
-│   └── tests/                                 # Automated Pytest suite (39 tests)
+│   └── tests/                                 # Automated Pytest suite (117 tests passing)
 │       ├── conftest.py                        # Test harness & fixtures
 │       ├── test_events.py                     # Ingestion & retrieval tests
 │       ├── test_duplicate_handling.py         # Anti-replay tests
@@ -90,14 +109,37 @@ sentinel/
 │       ├── test_middleware.py                 # Security headers & size limits
 │       ├── test_detection_rules.py            # Comprehensive tests for all 6 rules
 │       ├── test_risk_scoring.py               # Risk scoring & severity bands tests
-│       └── test_incidents_api.py              # Incidents API, triage, & deduplication tests
+│       ├── test_incidents_api.py              # Incidents API, triage, & deduplication tests
+│       ├── test_ml_features.py                # ML feature extraction tests
+│       ├── test_ml_detector.py                # Isolation Forest training and inference tests
+│       ├── test_ml_incident_integration.py    # ML incident correlation tests
+│       ├── test_ml_api.py                     # ML REST endpoints tests
+│       ├── test_lstm_autoencoder.py           # LSTM PyTorch model & tensor tests
+│       ├── test_lstm_sequence_pipeline.py     # LSTM sequence generation & isolation tests
+│       ├── test_lstm_detector.py              # LSTM thresholding & incident tests
+│       ├── test_lstm_api.py                   # LSTM REST endpoints tests
+│       ├── test_bank_approval_workflow.py     # Two-person bank approval lifecycle tests
+│       ├── test_bank_approval_qa.py           # Bank approval priority QA tests (Items a-n)
+│       └── test_unified_assessment.py         # Multi-tier risk aggregation tests
+├── frontend/                                  # React 19 + TypeScript SOC Dashboard
+│   ├── src/
+│   │   ├── api/client.ts                      # Axios API client with RBAC persona switcher
+│   │   ├── components/                        # SOC Dashboard module components
+│   │   └── context/AuthContext.tsx            # Persona simulation provider
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── tsconfig.json
 └── docs/
     ├── architecture.md                        # Technical architecture specification
     ├── detection_engine.md                    # Detailed detection engine & rules guide
     ├── risk_scoring.md                        # Explainable risk scoring documentation
     ├── data_dictionary.md                     # Database tables and column definitions
     ├── security_architecture.md               # Threat model and defensive controls
-    └── postgresql_setup_windows.md            # Windows 11 database installation guide
+    ├── postgresql_setup_windows.md            # Windows 11 database installation guide
+    └── qa/                                    # QA & Verification Audit Documentation
+        ├── 00_baseline.md                     # Baseline status report
+        ├── 01_bank_approvals_qa.md            # Phase 2 Bank Approvals priority audit
+        └── 02_system_audit_report.md          # Complete system audit & real case analysis
 ```
 
 ---
@@ -486,21 +528,38 @@ Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/bank-changes/<request_id>/r
 
 ---
 
-## 16. Automated Test Suite (103 Passing Tests)
+## 16. Automated Test Suite (117 Passing Tests)
 
 Run the complete test suite verifying Phase 1, Phase 2, Phase 3, Phase 4, Phase 5, and Phase 6:
 ```powershell
-cd "e:\project crimathon\drive-download-20261119T081747Z-1-001\pipeline buid\sentinel\backend"
+cd sentinel/backend
 pytest -v
 ```
 
-**Test Coverage Summary**:
+**Test Coverage Summary (117 Tests Total)**:
 - **Phase 1 Foundation (21 tests)**: Ingestion, schema validation, duplicate collision rejection, PII/bank redaction, size limits, health probes.
-- **Phase 2 Deterministic Rules (18 tests)**: 6 security detection rules (`SEC-RULE-*`), risk scoring, incident correlation & deduplication, triage status lifecycle.
+- **Phase 2 Deterministic Rules (18 tests)**: 6 security detection rules (`SEC-RULE-*`), risk scoring, incident correlation & deduplication, triage status lifecycle (`PATCH /api/v1/incidents/{incident_id}`).
 - **Phase 3 Isolation Forest (18 tests)**: 15-feature extraction, empty/missing event tolerance, model training & Joblib persistence roundtrip, normal vs anomalous scoring, baseline sufficiency enforcement, ML incident integration, and ML REST API.
 - **Phase 4 LSTM Autoencoder (22 tests)**: Sequence generation, chronological ordering, service isolation, train-only normalization, PyTorch forward pass, reconstruction loss, safe state_dict persistence/loading, normal sequence reconstruction, multi-step attack sequence detection, ML-ANOMALY-LSTM-001 incident generation, deduplication, fault tolerance, and LSTM REST API.
-- **Phase 5 Two-Person Bank Approval (14 tests)**: Strict two-person rule, anti-self-approval rejection, anti-duplicate approver rejection, active account invariance until commit, atomic commit with row-locking, rejection workflow, cancellation workflow, expiration handling, tamper detection via cryptographic fingerprint mismatch, modification and approval invalidation, sensitive data masking guarantee, and SEC-RULE-BANK-001 incident correlation.
+- **Phase 5 Two-Person Bank Approval (28 tests)**: Strict two-person rule, anti-self-approval rejection (`403 SelfApprovalProhibited`), anti-duplicate approver rejection (`400 DuplicateApprovalProhibited`), non-approver rejection (`403 AccessDenied`), active account invariance until commit, atomic commit with row-locking (`SELECT ... FOR UPDATE`), rejection workflow, cancellation workflow, expiration handling, tamper detection via cryptographic fingerprint mismatch (`409 FingerprintMismatch`), modify route (`PUT /api/v1/bank-changes/{id}`), real PostgreSQL concurrency safety with `ThreadPoolExecutor`, Fernet encryption at rest, audit trail append-only immutability enforced by DB triggers and ORM listeners, sensitive data masking guarantee, and SEC-RULE-BANK-001 incident correlation.
 - **Phase 6 Unified Assessment & Detection Integration (10 tests)**: Synergistic risk aggregation, missing model handling (never assumed normal), deterministic hard floor, multi-tier compounding boosts, on-demand evaluation API, combined incident assessment, unified detection analytics summary, bank change risk association with security warnings, AI non-bypass invariant, and sensitive data masking in assessments.
+
+---
+
+## 17. Architecture Verification & Health Harness
+
+SENTINEL includes an automated self-verification script:
+```powershell
+python verify_sentinel.py --pytest "sentinel/backend" --report "sentinel/docs/qa/verify_report.json"
+```
+This tests:
+1. System Health Probe (`/api/v1/health`)
+2. Security Detection Rules (all 6 active)
+3. Isolation Forest Model Status
+4. PyTorch LSTM Autoencoder Model Status
+5. Bank Change Approval Listing
+6. Unified Multi-Tier Analytics Summary
+7. Pytest Test Suite Execution (117/117 passing)
 
 ---
 
@@ -527,13 +586,17 @@ python -m uvicorn sentinel.backend.app.main:app --host 127.0.0.1 --port 8000
 
 #### Terminal 2: React SOC Dashboard
 ```powershell
-cd sentinel\frontend
+cd sentinel/frontend
 npm run dev
 ```
 Navigate to `http://127.0.0.1:5173` in your browser.
 
+---
 
-1. **Synthetic Development Baselines**: The initial baseline models are trained on synthetic normal traffic matching service profiles. Real-world accuracy requires continuous retraining from verified production logs.
-2. **Administrative Operation Protection**: Administrative training endpoints (`/api/v1/ml/train` and `/api/v1/ml/lstm/train`) are currently restricted to local network binding during development. Production deployment requires OAuth2 / RBAC guards.
+## 19. Known Limitations & Hardening Recommendations
+
+1. **Development Authentication Adapter**: The `X-User-Id` header mechanism is designed for development and automated testing. Production deployment requires an enterprise OpenID Connect (OIDC) / SAML 2.0 Identity Provider with Multi-Factor Authentication (MFA) and cryptographic JWT validation.
+2. **Approval Reference Pattern Compatibility**: The standard governance ticket pattern is configured as `^APP-\d{4}-\d{4,}$`. When integrating legacy systems utilizing `APR-XXXX` or batch `BULK-XXXX` conventions, configure `VALID_APPROVAL_REGEX` in `detection/config.py` accordingly.
 3. **Sequence Length Context Requirement**: A minimum sequence of 20 consecutive events for a single service identity is required before evaluating LSTM sequential patterns.
-4. **Passive Monitoring vs. Active Blocking**: The detection tiers operate as analytical observers and incident generators; they do not terminate active client connections.
+4. **Passive Monitoring vs. Active Blocking**: Detection tiers operate as analytical observers and incident generators; they do not terminate active client connections. AI detection scores never authorize or commit sensitive financial transactions.
+5. **Distributed Worker Caching**: In high-throughput distributed deployments (>10,000 req/s), fronting sliding window aggregations with Redis will minimize PostgreSQL query load.

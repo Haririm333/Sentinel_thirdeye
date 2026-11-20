@@ -2,7 +2,7 @@
   "model_id": "isoforest_srv-tallybridge-sync_v1.0.0",
   "model_version": "1.0.0",
   "service_identity": "srv-tallybridge-sync",
-  "created_at": "2026-11-19T21:36:37.757867+00:00",
+  "created_at": "2026-11-20T03:44:11.417592+00:00",
   "feature_schema_version": "1.0.0",
   "feature_names": [
     "requests_count",
@@ -21,6 +21,7 @@
     "sensitive_resource_frequency",
     "permission_deviation_count"
   ],
+  "feature_count": 15,
   "calibrated_threshold": -0.5578190909265553,
   "training_sample_count": 60,
   "hyperparameters": {

@@ -137,3 +137,19 @@ class ApprovalAuditLog(Base):
 
     def __repr__(self) -> str:
         return f"<ApprovalAuditLog(action='{self.action}', actor='{self.actor_id}', result='{self.result}')>"
+
+
+from sqlalchemy import event
+
+
+@event.listens_for(ApprovalAuditLog, "before_update")
+def block_audit_log_update(mapper, connection, target):
+    """Enforce append-only immutability: updates to audit records are forbidden."""
+    raise PermissionError("ApprovalAuditLog entries are append-only and immutable; UPDATE is strictly prohibited.")
+
+
+@event.listens_for(ApprovalAuditLog, "before_delete")
+def block_audit_log_delete(mapper, connection, target):
+    """Enforce append-only immutability: deletions of audit records are forbidden."""
+    raise PermissionError("ApprovalAuditLog entries are append-only and immutable; DELETE is strictly prohibited.")
+

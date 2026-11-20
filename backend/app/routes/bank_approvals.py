@@ -23,6 +23,7 @@ from sentinel.backend.app.security.auth import (
 )
 from sentinel.backend.app.schemas.bank_approval import (
     CreateBankChangeRequest,
+    ModifyBankChangeRequest,
     ApprovalActionRequest,
     RejectActionRequest,
     CancelActionRequest,
@@ -33,6 +34,7 @@ from sentinel.backend.app.schemas.bank_approval import (
 )
 from sentinel.backend.app.services.bank_approval_service import (
     create_bank_change_request,
+    modify_change_request,
     approve_bank_change_request,
     reject_bank_change_request,
     cancel_bank_change_request,
@@ -164,6 +166,34 @@ def get_bank_change(
     return _to_response_dict(change_req)
 
 
+@router.put(
+    "/bank-changes/{request_id}",
+    response_model=BankChangeResponse,
+    summary="Modify Bank Change Request",
+    description="Requester or admin modifies change request details. Invalidates prior approvals, increments version, and resets status to PENDING_APPROVAL."
+)
+def update_bank_change(
+    request_id: str,
+    payload: ModifyBankChangeRequest,
+    request: Request,
+    current_user: User = Depends(authenticate_user),
+    db: Session = Depends(get_db)
+):
+    """Modify change request details, invalidate prior approvals, and reset to PENDING_APPROVAL."""
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    updated_req = modify_change_request(
+        db=db,
+        request_id=request_id,
+        user=current_user,
+        proposed_account_number=payload.proposed_account_number,
+        proposed_bank_name=payload.proposed_bank_name,
+        proposed_routing_number=payload.proposed_routing_number,
+        request_reason=payload.request_reason,
+        client_ip=client_ip
+    )
+    return _to_response_dict(updated_req)
+
+
 @router.post(
     "/bank-changes/{request_id}/approve",
     response_model=BankChangeResponse,
@@ -174,7 +204,7 @@ def approve_bank_change(
     request_id: str,
     payload: ApprovalActionRequest,
     request: Request,
-    current_user: User = Depends(require_role(["FINANCE_APPROVER", "FINANCE_ADMIN"])),
+    current_user: User = Depends(authenticate_user),
     db: Session = Depends(get_db)
 ):
     """Approve a bank change step. Commits atomically when 2 approvals are reached."""
@@ -199,7 +229,7 @@ def reject_bank_change(
     request_id: str,
     payload: RejectActionRequest,
     request: Request,
-    current_user: User = Depends(require_role(["FINANCE_APPROVER", "FINANCE_ADMIN"])),
+    current_user: User = Depends(authenticate_user),
     db: Session = Depends(get_db)
 ):
     """Reject change request."""
@@ -222,18 +252,19 @@ def reject_bank_change(
 )
 def cancel_bank_change(
     request_id: str,
-    payload: CancelActionRequest,
     request: Request,
+    payload: Optional[CancelActionRequest] = None,
     current_user: User = Depends(authenticate_user),
     db: Session = Depends(get_db)
 ):
     """Cancel change request."""
     client_ip = request.client.host if request.client else "127.0.0.1"
+    reason = payload.reason if payload else None
     cancelled_req = cancel_bank_change_request(
         db=db,
         request_id=request_id,
         user=current_user,
-        reason=payload.reason,
+        reason=reason,
         client_ip=client_ip
     )
     return _to_response_dict(cancelled_req)
