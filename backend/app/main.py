@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from sentinel.backend.app.config import get_settings
 from sentinel.backend.app.database import init_db, check_db_connection
@@ -121,6 +121,12 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
             "message": "An unexpected server error occurred. This anomaly has been safely logged."
         }
     )
+
+
+@app.get("/", include_in_schema=False)
+async def root_redirect():
+    """Redirect root path to interactive Swagger API documentation."""
+    return RedirectResponse(url="/docs")
 
 
 # 4. Include Routers
